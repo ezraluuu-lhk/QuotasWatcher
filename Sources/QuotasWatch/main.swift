@@ -40,6 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.behavior = .transient
         popover.contentSize = NSSize(width: 360, height: 190)
         popover.contentViewController = viewController
+        viewController.touchBar = touchBarController.makeTouchBar()
         viewController.onRefresh = { [weak self] in self?.refresh() }
         viewController.onQuit = { NSApp.terminate(nil) }
         viewController.update(with: state)
@@ -56,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
             NSApp.activate(ignoringOtherApps: true)
+            viewController.view.window?.makeFirstResponder(viewController)
         }
     }
 
