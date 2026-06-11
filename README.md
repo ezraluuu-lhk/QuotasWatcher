@@ -1,6 +1,20 @@
 # QuotasWatcher
 
-QuotasWatcher is a small macOS menu bar app for Codex quota visibility. It uses Swift/AppKit and reads quota data from the local Codex app-server instead of scraping web pages.
+[简体中文](README.zh-Hans.md)
+
+A tiny macOS utility for watching your Codex quota from the Touch Bar or menu bar.
+
+If you are still using a MacBook with a Touch Bar, QuotasWatcher shows your remaining Codex quota there. On Macs without a Touch Bar, it falls back to the menu bar.
+
+Open it, watch the next 5-hour quota window, and start being anxious productively.
+
+Claude Code support: no. I do not like Anthropic, so if you need that version, go vibe it yourself.
+
+## Screenshots
+
+![QuotasWatcher menu bar popover](docs/assets/menu-en.png)
+
+![QuotasWatcher Touch Bar quota display](docs/assets/touchbar-en.png)
 
 ## Build
 
@@ -46,8 +60,8 @@ Binary lookup order:
 
 The menu bar item shows the 5-hour quota remaining percentage. The popover shows two segmented battery rows:
 
-- `5小时`
-- `周限额`
+- `5h`
+- `Weekly`
 
 Each row displays remaining percentage and reset time. Remaining quota is calculated as `100 - usedPercent`. Refreshes keep the previous data visible until a new valid response arrives. The app refreshes every 5 minutes and also provides manual refresh plus quit actions.
 
@@ -55,7 +69,7 @@ After launch, look for `Codex --%` or `Codex NN%` in the macOS menu bar near the
 
 Touch Bar content is contextual: click the menu bar item to open the QuotasWatcher popover and make the app active. The Touch Bar mirrors the same two quota rows when macOS exposes a physical Touch Bar for the active app.
 
-The popover and right-click menu include `复制错误` and `复制日志` actions for troubleshooting. Logs are written to:
+The popover and right-click menu include `Copy Error` and `Copy Log` actions for troubleshooting. Logs are written to:
 
 ```text
 ~/Library/Application Support/QuotasWatcher/QuotasWatcher.log
