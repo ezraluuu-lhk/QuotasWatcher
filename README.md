@@ -54,6 +54,12 @@ After launch, look for `Codex --%` or `Codex NN%` in the macOS menu bar near the
 
 Touch Bar content is contextual: click the menu bar item to open the QuotasWatch popover and make the app active. The Touch Bar mirrors the same two quota rows when macOS exposes a physical Touch Bar for the active app.
 
+The popover and right-click menu include `复制错误` and `复制日志` actions for troubleshooting. Logs are written to:
+
+```text
+~/Library/Application Support/QuotasWatch/QuotasWatch.log
+```
+
 ## Troubleshooting
 
 - `Codex binary was not found.`: install Codex or make sure `codex` is available in one of the lookup paths above.

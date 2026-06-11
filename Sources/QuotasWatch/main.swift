@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
             self?.refresh()
         }
+        AppLog.shared.append("Application launched. Log file: \(AppLog.shared.fileURL.path)")
         refresh()
     }
 
@@ -41,6 +42,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentViewController = viewController
         viewController.touchBar = touchBarController.makeTouchBar()
         viewController.onRefresh = { [weak self] in self?.refresh() }
+        viewController.onCopyError = { [weak self] in self?.copyCurrentError() }
+        viewController.onCopyLog = { self.copyLog() }
         viewController.onQuit = { NSApp.terminate(nil) }
         viewController.update(with: state)
     }
@@ -63,6 +66,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showContextMenu() {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "刷新", action: #selector(refreshFromMenu), keyEquivalent: "r"))
+        menu.addItem(NSMenuItem(title: "复制错误", action: #selector(copyErrorFromMenu), keyEquivalent: "e"))
+        menu.addItem(NSMenuItem(title: "复制日志", action: #selector(copyLogFromMenu), keyEquivalent: "l"))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "退出 QuotasWatch", action: #selector(quitFromMenu), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
@@ -79,6 +84,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.terminate(nil)
     }
 
+    @objc private func copyErrorFromMenu() {
+        copyCurrentError()
+    }
+
+    @objc private func copyLogFromMenu() {
+        copyLog()
+    }
+
     private func refresh() {
         guard !state.isRefreshing else {
             return
@@ -92,15 +105,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let snapshot = try await client.fetchRateLimits()
                 await MainActor.run {
                     state.finishRefresh(with: .success(snapshot))
+                    AppLog.shared.append("Refresh succeeded.")
                     render()
                 }
             } catch {
                 await MainActor.run {
                     state.finishRefresh(with: .failure(error))
+                    AppLog.shared.append("Refresh failed: \(error.localizedDescription)")
                     render()
                 }
             }
         }
+    }
+
+    private func copyCurrentError() {
+        let text = state.errorMessage ?? "No current QuotasWatch error."
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    private func copyLog() {
+        let text = AppLog.shared.readText()
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text.isEmpty ? "No QuotasWatch log entries." : text, forType: .string)
     }
 
     private func render() {
@@ -125,12 +152,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 final class QuotaPopoverViewController: NSViewController {
     var onRefresh: (() -> Void)?
+    var onCopyError: (() -> Void)?
+    var onCopyLog: (() -> Void)?
     var onQuit: (() -> Void)?
 
     private let fiveHourRow = QuotaRowView(title: "5小时")
     private let weeklyRow = QuotaRowView(title: "周限额")
     private let statusLabel = NSTextField(labelWithString: "等待刷新")
     private let refreshButton = NSButton(title: "刷新", target: nil, action: nil)
+    private let copyErrorButton = NSButton(title: "复制错误", target: nil, action: nil)
+    private let copyLogButton = NSButton(title: "复制日志", target: nil, action: nil)
     private let quitButton = NSButton(title: "退出", target: nil, action: nil)
 
     override func loadView() {
@@ -163,11 +194,19 @@ final class QuotaPopoverViewController: NSViewController {
         footer.spacing = 8
         footer.addArrangedSubview(NSView())
         footer.addArrangedSubview(refreshButton)
+        footer.addArrangedSubview(copyErrorButton)
+        footer.addArrangedSubview(copyLogButton)
         footer.addArrangedSubview(quitButton)
 
         refreshButton.bezelStyle = .rounded
         refreshButton.target = self
         refreshButton.action = #selector(refreshClicked)
+        copyErrorButton.bezelStyle = .rounded
+        copyErrorButton.target = self
+        copyErrorButton.action = #selector(copyErrorClicked)
+        copyLogButton.bezelStyle = .rounded
+        copyLogButton.target = self
+        copyLogButton.action = #selector(copyLogClicked)
         quitButton.bezelStyle = .rounded
         quitButton.target = self
         quitButton.action = #selector(quitClicked)
@@ -191,6 +230,7 @@ final class QuotaPopoverViewController: NSViewController {
         fiveHourRow.update(with: state.snapshot?.fiveHour)
         weeklyRow.update(with: state.snapshot?.weekly)
         refreshButton.isEnabled = !state.isRefreshing
+        copyErrorButton.isEnabled = state.errorMessage != nil
 
         if state.isRefreshing {
             statusLabel.stringValue = "刷新中"
@@ -205,6 +245,14 @@ final class QuotaPopoverViewController: NSViewController {
 
     @objc private func refreshClicked() {
         onRefresh?()
+    }
+
+    @objc private func copyErrorClicked() {
+        onCopyError?()
+    }
+
+    @objc private func copyLogClicked() {
+        onCopyLog?()
     }
 
     @objc private func quitClicked() {
