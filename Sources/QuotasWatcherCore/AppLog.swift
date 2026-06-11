@@ -13,9 +13,9 @@ public final class AppLog {
 
         let baseURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-        let directoryURL = baseURL.appendingPathComponent("QuotasWatch", isDirectory: true)
+        let directoryURL = baseURL.appendingPathComponent("QuotasWatcher", isDirectory: true)
         try? fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        fileURL = directoryURL.appendingPathComponent("QuotasWatch.log")
+        fileURL = directoryURL.appendingPathComponent("QuotasWatcher.log")
     }
 
     public func append(_ message: String) {

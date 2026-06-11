@@ -14,5 +14,5 @@
 "status.updated.format" = "Updated %@";
 "status.item.percent.format" = "Codex %d%%%@";
 "status.item.unavailable.format" = "Codex --%%%@";
-"clipboard.no_error" = "No current QuotasWatch error.";
-"clipboard.no_log" = "No QuotasWatch log entries.";
+"clipboard.no_error" = "No current QuotasWatcher error.";
+"clipboard.no_log" = "No QuotasWatcher log entries.";

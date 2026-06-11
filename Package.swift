@@ -3,27 +3,27 @@
 import PackageDescription
 
 let package = Package(
-    name: "QuotasWatch",
+    name: "QuotasWatcher",
     defaultLocalization: "en",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "QuotasWatch", targets: ["QuotasWatch"]),
-        .library(name: "QuotasWatchCore", targets: ["QuotasWatchCore"])
+        .executable(name: "QuotasWatcher", targets: ["QuotasWatcher"]),
+        .library(name: "QuotasWatcherCore", targets: ["QuotasWatcherCore"])
     ],
     targets: [
-        .target(name: "QuotasWatchCore"),
+        .target(name: "QuotasWatcherCore"),
         .executableTarget(
-            name: "QuotasWatch",
-            dependencies: ["QuotasWatchCore"],
+            name: "QuotasWatcher",
+            dependencies: ["QuotasWatcherCore"],
             resources: [
                 .process("Resources")
             ]
         ),
         .testTarget(
-            name: "QuotasWatchCoreTests",
-            dependencies: ["QuotasWatchCore"]
+            name: "QuotasWatcherCoreTests",
+            dependencies: ["QuotasWatcherCore"]
         )
     ]
 )

@@ -1,5 +1,5 @@
 import AppKit
-import QuotasWatchCore
+import QuotasWatcherCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -69,7 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: L10n.text("button.copy_error"), action: #selector(copyErrorFromMenu), keyEquivalent: "e"))
         menu.addItem(NSMenuItem(title: L10n.text("button.copy_log"), action: #selector(copyLogFromMenu), keyEquivalent: "l"))
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: String(format: L10n.text("menu.quit.format"), "QuotasWatch"), action: #selector(quitFromMenu), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: String(format: L10n.text("menu.quit.format"), "QuotasWatcher"), action: #selector(quitFromMenu), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
@@ -454,8 +454,8 @@ final class TouchBarQuotaView: NSView {
 }
 
 private extension NSTouchBarItem.Identifier {
-    static let fiveHourQuota = NSTouchBarItem.Identifier("com.quotaswatch.touchbar.fiveHour")
-    static let weeklyQuota = NSTouchBarItem.Identifier("com.quotaswatch.touchbar.weekly")
+    static let fiveHourQuota = NSTouchBarItem.Identifier("com.quotaswatcher.touchbar.fiveHour")
+    static let weeklyQuota = NSTouchBarItem.Identifier("com.quotaswatcher.touchbar.weekly")
 }
 
 enum DateFormatters {

@@ -14,5 +14,5 @@
 "status.updated.format" = "更新 %@";
 "status.item.percent.format" = "Codex %d%%%@";
 "status.item.unavailable.format" = "Codex --%%%@";
-"clipboard.no_error" = "当前没有 QuotasWatch 错误。";
-"clipboard.no_log" = "当前没有 QuotasWatch 日志。";
+"clipboard.no_error" = "当前没有 QuotasWatcher 错误。";
+"clipboard.no_log" = "当前没有 QuotasWatcher 日志。";

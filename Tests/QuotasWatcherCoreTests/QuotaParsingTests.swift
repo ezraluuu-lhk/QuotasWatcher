@@ -1,5 +1,5 @@
 import XCTest
-@testable import QuotasWatchCore
+@testable import QuotasWatcherCore
 
 final class QuotaParsingTests: XCTestCase {
     func testDecodesSingleRateLimitPayload() throws {

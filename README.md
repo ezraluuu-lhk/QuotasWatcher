@@ -1,6 +1,6 @@
-# QuotasWatch
+# QuotasWatcher
 
-QuotasWatch is a small macOS menu bar app for Codex quota visibility. It uses Swift/AppKit and reads quota data from the local Codex app-server instead of scraping web pages.
+QuotasWatcher is a small macOS menu bar app for Codex quota visibility. It uses Swift/AppKit and reads quota data from the local Codex app-server instead of scraping web pages.
 
 ## Build
 
@@ -14,22 +14,22 @@ Scripts/package-app.sh
 The packaged app is written to:
 
 ```text
-dist/QuotasWatch.app
+dist/QuotasWatcher.app
 ```
 
 Open the `.app` bundle itself from Finder, or run:
 
 ```bash
-open dist/QuotasWatch.app
+open dist/QuotasWatcher.app
 ```
 
-Do not open `dist/QuotasWatch.app/Contents/MacOS/QuotasWatch` directly. That is the internal Unix executable; Finder will launch Terminal and show a line like `.../Contents/MacOS/QuotasWatch ; exit;`.
+Do not open `dist/QuotasWatcher.app/Contents/MacOS/QuotasWatcher` directly. That is the internal Unix executable; Finder will launch Terminal and show a line like `.../Contents/MacOS/QuotasWatcher ; exit;`.
 
 ## Requirements
 
 - macOS 13 or newer.
 - Codex CLI/app-server installed and authenticated.
-- QuotasWatch starts Codex with:
+- QuotasWatcher starts Codex with:
 
 ```bash
 codex app-server --listen stdio://
@@ -53,21 +53,21 @@ Each row displays remaining percentage and reset time. Remaining quota is calcul
 
 After launch, look for `Codex --%` or `Codex NN%` in the macOS menu bar near the clock. Click it to open the quota popover. Right-click it for refresh and quit actions.
 
-Touch Bar content is contextual: click the menu bar item to open the QuotasWatch popover and make the app active. The Touch Bar mirrors the same two quota rows when macOS exposes a physical Touch Bar for the active app.
+Touch Bar content is contextual: click the menu bar item to open the QuotasWatcher popover and make the app active. The Touch Bar mirrors the same two quota rows when macOS exposes a physical Touch Bar for the active app.
 
 The popover and right-click menu include `复制错误` and `复制日志` actions for troubleshooting. Logs are written to:
 
 ```text
-~/Library/Application Support/QuotasWatch/QuotasWatch.log
+~/Library/Application Support/QuotasWatcher/QuotasWatcher.log
 ```
 
 ## Localization
 
-QuotasWatch uses native macOS `.lproj` localization files:
+QuotasWatcher uses native macOS `.lproj` localization files:
 
 ```text
-Sources/QuotasWatch/Resources/en.lproj/Localizable.strings
-Sources/QuotasWatch/Resources/zh-Hans.lproj/Localizable.strings
+Sources/QuotasWatcher/Resources/en.lproj/Localizable.strings
+Sources/QuotasWatcher/Resources/zh-Hans.lproj/Localizable.strings
 ```
 
 Run this before opening a pull request:
@@ -76,7 +76,7 @@ Run this before opening a pull request:
 Scripts/check-localizations.sh
 ```
 
-The packaging script copies these `.lproj` directories into `dist/QuotasWatch.app/Contents/Resources`.
+The packaging script copies these `.lproj` directories into `dist/QuotasWatcher.app/Contents/Resources`.
 
 ## License
 
@@ -85,6 +85,6 @@ MIT. See [LICENSE](LICENSE).
 ## Troubleshooting
 
 - `Codex binary was not found.`: install Codex or make sure `codex` is available in one of the lookup paths above.
-- `Not initialized`: the app-server requires JSON-RPC `initialize` before `account/rateLimits/read`; QuotasWatch sends this automatically. If this appears, update Codex and restart the app.
+- `Not initialized`: the app-server requires JSON-RPC `initialize` before `account/rateLimits/read`; QuotasWatcher sends this automatically. If this appears, update Codex and restart the app.
 - `failed to fetch codex rate limits`: Codex app-server could not reach the ChatGPT backend or is not authenticated. Check network access and run Codex once interactively to confirm login.
-- No Touch Bar content: click the QuotasWatch menu bar item first so its popover is active. Touch Bar support also depends on hardware and macOS Touch Bar availability; Macs without a physical Touch Bar will not show it.
+- No Touch Bar content: click the QuotasWatcher menu bar item first so its popover is active. Touch Bar support also depends on hardware and macOS Touch Bar availability; Macs without a physical Touch Bar will not show it.

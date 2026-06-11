@@ -3,17 +3,18 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIGURATION="${CONFIGURATION:-release}"
-APP_DIR="$ROOT_DIR/dist/QuotasWatch.app"
+APP_DIR="$ROOT_DIR/dist/QuotasWatcher.app"
+LEGACY_APP_DIR="$ROOT_DIR/dist/QuotasWatch.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 
 swift build -c "$CONFIGURATION" --package-path "$ROOT_DIR"
 
-rm -rf "$APP_DIR"
+rm -rf "$APP_DIR" "$LEGACY_APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
-cp "$ROOT_DIR/.build/$CONFIGURATION/QuotasWatch" "$MACOS_DIR/QuotasWatch"
-cp -R "$ROOT_DIR/Sources/QuotasWatch/Resources/"*.lproj "$RESOURCES_DIR/"
+cp "$ROOT_DIR/.build/$CONFIGURATION/QuotasWatcher" "$MACOS_DIR/QuotasWatcher"
+cp -R "$ROOT_DIR/Sources/QuotasWatcher/Resources/"*.lproj "$RESOURCES_DIR/"
 printf "APPL????" > "$CONTENTS_DIR/PkgInfo"
 
 cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
@@ -22,13 +23,13 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
 <plist version="1.0">
 <dict>
   <key>CFBundleExecutable</key>
-  <string>QuotasWatch</string>
+  <string>QuotasWatcher</string>
   <key>CFBundleIdentifier</key>
-  <string>com.local.QuotasWatch</string>
+  <string>com.local.QuotasWatcher</string>
   <key>CFBundleName</key>
-  <string>QuotasWatch</string>
+  <string>QuotasWatcher</string>
   <key>CFBundleDisplayName</key>
-  <string>QuotasWatch</string>
+  <string>QuotasWatcher</string>
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleLocalizations</key>
@@ -52,5 +53,5 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-chmod +x "$MACOS_DIR/QuotasWatch"
+chmod +x "$MACOS_DIR/QuotasWatcher"
 echo "Built $APP_DIR"

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-RESOURCES_DIR="$ROOT_DIR/Sources/QuotasWatch/Resources"
+RESOURCES_DIR="$ROOT_DIR/Sources/QuotasWatcher/Resources"
 REFERENCE="$RESOURCES_DIR/en.lproj/Localizable.strings"
 
 if [[ ! -f "$REFERENCE" ]]; then
