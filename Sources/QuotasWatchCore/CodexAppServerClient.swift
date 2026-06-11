@@ -26,7 +26,7 @@ public enum CodexAppServerError: LocalizedError, Equatable {
 public final class CodexAppServerClient {
     public var timeout: TimeInterval
 
-    public init(timeout: TimeInterval = 30) {
+    public init(timeout: TimeInterval = 60) {
         self.timeout = timeout
     }
 
@@ -82,25 +82,43 @@ public final class CodexAppServerClient {
         stdin.fileHandleForWriting.closeFile()
 
         let deadline = Date().addingTimeInterval(timeout)
-        while process.isRunning && Date() < deadline {
+        var parsedResult: Result<QuotaSnapshot, Error>?
+        while Date() < deadline {
+            let stdoutText = String(data: stdoutBuffer.data(), encoding: .utf8) ?? ""
+            let stderrText = String(data: stderrBuffer.data(), encoding: .utf8) ?? ""
+            do {
+                parsedResult = .success(try JSONRPCParser.parseRateLimits(stdout: stdoutText, stderr: stderrText))
+                break
+            } catch CodexAppServerError.rpcError(let message) {
+                parsedResult = .failure(CodexAppServerError.rpcError(message))
+                break
+            } catch {
+                if !process.isRunning {
+                    parsedResult = .failure(error)
+                    break
+                }
+            }
             Thread.sleep(forTimeInterval: 0.05)
+        }
+
+        if let parsedResult {
+            if process.isRunning {
+                process.terminate()
+                process.waitUntilExit()
+            }
+            stdout.fileHandleForReading.readabilityHandler = nil
+            stderr.fileHandleForReading.readabilityHandler = nil
+            return try parsedResult.get()
         }
 
         if process.isRunning {
             process.terminate()
             process.waitUntilExit()
-            stdout.fileHandleForReading.readabilityHandler = nil
-            stderr.fileHandleForReading.readabilityHandler = nil
-            throw CodexAppServerError.timeout
         }
 
-        process.waitUntilExit()
         stdout.fileHandleForReading.readabilityHandler = nil
         stderr.fileHandleForReading.readabilityHandler = nil
-
-        let stdoutText = String(data: stdoutBuffer.data(), encoding: .utf8) ?? ""
-        let stderrText = String(data: stderrBuffer.data(), encoding: .utf8) ?? ""
-        return try JSONRPCParser.parseRateLimits(stdout: stdoutText, stderr: stderrText)
+        throw CodexAppServerError.timeout
     }
 }
 
