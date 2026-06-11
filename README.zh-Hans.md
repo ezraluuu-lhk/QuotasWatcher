@@ -2,13 +2,14 @@
 
 [English](README.md)
 
-一个很小的 macOS 工具，用来在 Touch Bar 或菜单栏查看 Codex 额度。
+一个支持 Touch Bar 显示的 Codex 用量工具。
 
-如果你还在用带 Touch Bar 的 MacBook，QuotasWatcher 会把 Codex 剩余额度显示在那里。没有 Touch Bar 的 Mac 上，它会退回到菜单栏。
+灵感来自小红书上看到的一段 Prompt。后来想回去找原作者，但没找到。要是你刷到了，DM 我，我给你补到致谢里。
 
-打开它，看着下一个 5 小时额度窗口，然后有效率地焦虑。
-
-Claude Code 支持：没有。我不喜欢 Anthropic；如果你需要那个版本，可以自己 vibe 一个。
+原始 Prompt：
+```
+用 Swift/AppKit 做成 macOS 菜单栏 + Touch Bar 小应用。额度不抓网页，而是调用本机 Codex 的 app-server：启动 /Applications/Codex.app/Contents/Resources/codex app-server --listen stdio://，通过 JSON-RPC 请求  account/rateLimits/read ，拿到 5 小时额度、周额度、已用百分比和重置时间。剩余额度用 100 - usedPercent 计算。界面做成两行分段电量条：5小时、周限额，右侧显示剩余百分比和重置时间。刷新时新数据回来再替换旧数据
+```
 
 ## 截图
 
