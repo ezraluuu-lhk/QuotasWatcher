@@ -17,6 +17,14 @@
 
 ![QuotasWatcher Touch Bar 额度显示](docs/assets/touchbar-zh-Hans.png)
 
+## 从 Release 安装
+
+1. 从 [GitHub Releases](https://github.com/ezraluuu-lhk/QuotasWatcher/releases) 下载最新的 `QuotasWatcher-*-macos.zip`。
+2. 解压后可以把 `QuotasWatcher.app` 移动到 `/Applications`。
+3. 打开 `QuotasWatcher.app`，然后在 macOS 菜单栏里找 `Codex --%` 或 `Codex NN%`。
+
+当前 app 还没有签名和公证。如果 macOS 阻止首次启动，右键点击 `QuotasWatcher.app`，选择 `打开`，再确认一次。
+
 ## 构建
 
 ```bash

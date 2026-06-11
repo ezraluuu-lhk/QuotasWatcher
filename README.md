@@ -16,6 +16,14 @@ Claude Code support: no. I do not like Anthropic, so if you need that version, g
 
 ![QuotasWatcher Touch Bar quota display](docs/assets/touchbar-en.png)
 
+## Install from Release
+
+1. Download the latest `QuotasWatcher-*-macos.zip` from [GitHub Releases](https://github.com/ezraluuu-lhk/QuotasWatcher/releases).
+2. Unzip it and move `QuotasWatcher.app` to `/Applications` if you want.
+3. Open `QuotasWatcher.app`, then look for `Codex --%` or `Codex NN%` in the macOS menu bar.
+
+The app is not signed or notarized yet. If macOS blocks the first launch, right-click `QuotasWatcher.app`, choose `Open`, then confirm once.
+
 ## Build
 
 ```bash
