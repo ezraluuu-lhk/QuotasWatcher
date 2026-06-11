@@ -1,7 +1,6 @@
 import AppKit
 import QuotasWatchCore
 
-@main
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let popover = NSPopover()
@@ -427,3 +426,8 @@ enum DateFormatters {
         return formatter
     }()
 }
+
+let app = NSApplication.shared
+let delegate = AppDelegate()
+app.delegate = delegate
+app.run()

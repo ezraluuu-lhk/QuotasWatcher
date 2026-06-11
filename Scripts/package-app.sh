@@ -12,6 +12,7 @@ swift build -c "$CONFIGURATION" --package-path "$ROOT_DIR"
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR"
 cp "$ROOT_DIR/.build/$CONFIGURATION/QuotasWatch" "$MACOS_DIR/QuotasWatch"
+printf "APPL????" > "$CONTENTS_DIR/PkgInfo"
 
 cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
