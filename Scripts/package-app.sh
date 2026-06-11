@@ -6,12 +6,14 @@ CONFIGURATION="${CONFIGURATION:-release}"
 APP_DIR="$ROOT_DIR/dist/QuotasWatch.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
+RESOURCES_DIR="$CONTENTS_DIR/Resources"
 
 swift build -c "$CONFIGURATION" --package-path "$ROOT_DIR"
 
 rm -rf "$APP_DIR"
-mkdir -p "$MACOS_DIR"
+mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$ROOT_DIR/.build/$CONFIGURATION/QuotasWatch" "$MACOS_DIR/QuotasWatch"
+cp -R "$ROOT_DIR/Sources/QuotasWatch/Resources/"*.lproj "$RESOURCES_DIR/"
 printf "APPL????" > "$CONTENTS_DIR/PkgInfo"
 
 cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
@@ -27,6 +29,13 @@ cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
   <string>QuotasWatch</string>
   <key>CFBundleDisplayName</key>
   <string>QuotasWatch</string>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en</string>
+    <string>zh-Hans</string>
+  </array>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

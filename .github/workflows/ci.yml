@@ -1,0 +1,18 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check localizations
+        run: Scripts/check-localizations.sh
+      - name: Run tests
+        run: swift test
+      - name: Build app bundle
+        run: Scripts/package-app.sh

@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "QuotasWatch",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v13)
     ],
@@ -15,7 +16,10 @@ let package = Package(
         .target(name: "QuotasWatchCore"),
         .executableTarget(
             name: "QuotasWatch",
-            dependencies: ["QuotasWatchCore"]
+            dependencies: ["QuotasWatchCore"],
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "QuotasWatchCoreTests",

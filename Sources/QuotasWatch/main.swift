@@ -30,7 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem.button else {
             return
         }
-        button.title = "Codex --%"
+        button.title = L10n.statusTitle(remainingPercent: nil, isRefreshing: false)
         button.target = self
         button.action = #selector(statusItemClicked(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -38,7 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func configurePopover() {
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 360, height: 190)
+        popover.contentSize = NSSize(width: 440, height: 190)
         popover.contentViewController = viewController
         viewController.touchBar = touchBarController.makeTouchBar()
         viewController.onRefresh = { [weak self] in self?.refresh() }
@@ -65,11 +65,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showContextMenu() {
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "刷新", action: #selector(refreshFromMenu), keyEquivalent: "r"))
-        menu.addItem(NSMenuItem(title: "复制错误", action: #selector(copyErrorFromMenu), keyEquivalent: "e"))
-        menu.addItem(NSMenuItem(title: "复制日志", action: #selector(copyLogFromMenu), keyEquivalent: "l"))
+        menu.addItem(NSMenuItem(title: L10n.text("button.refresh"), action: #selector(refreshFromMenu), keyEquivalent: "r"))
+        menu.addItem(NSMenuItem(title: L10n.text("button.copy_error"), action: #selector(copyErrorFromMenu), keyEquivalent: "e"))
+        menu.addItem(NSMenuItem(title: L10n.text("button.copy_log"), action: #selector(copyLogFromMenu), keyEquivalent: "l"))
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "退出 QuotasWatch", action: #selector(quitFromMenu), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: String(format: L10n.text("menu.quit.format"), "QuotasWatch"), action: #selector(quitFromMenu), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
@@ -119,7 +119,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func copyCurrentError() {
-        let text = state.errorMessage ?? "No current QuotasWatch error."
+        let text = state.errorMessage ?? L10n.text("clipboard.no_error")
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
     }
@@ -127,7 +127,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func copyLog() {
         let text = AppLog.shared.readText()
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text.isEmpty ? "No QuotasWatch log entries." : text, forType: .string)
+        NSPasteboard.general.setString(text.isEmpty ? L10n.text("clipboard.no_log") : text, forType: .string)
     }
 
     private func render() {
@@ -141,11 +141,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let suffix = state.isRefreshing ? " ..." : ""
         if let remaining = state.snapshot?.fiveHour?.remainingPercent {
-            button.title = "Codex \(Int(round(remaining)))%\(suffix)"
+            button.title = L10n.statusTitle(remainingPercent: Int(round(remaining)), isRefreshing: state.isRefreshing)
         } else {
-            button.title = "Codex --%\(suffix)"
+            button.title = L10n.statusTitle(remainingPercent: nil, isRefreshing: state.isRefreshing)
         }
     }
 }
@@ -156,16 +155,16 @@ final class QuotaPopoverViewController: NSViewController {
     var onCopyLog: (() -> Void)?
     var onQuit: (() -> Void)?
 
-    private let fiveHourRow = QuotaRowView(title: "5小时")
-    private let weeklyRow = QuotaRowView(title: "周限额")
-    private let statusLabel = NSTextField(labelWithString: "等待刷新")
-    private let refreshButton = NSButton(title: "刷新", target: nil, action: nil)
-    private let copyErrorButton = NSButton(title: "复制错误", target: nil, action: nil)
-    private let copyLogButton = NSButton(title: "复制日志", target: nil, action: nil)
-    private let quitButton = NSButton(title: "退出", target: nil, action: nil)
+    private let fiveHourRow = QuotaRowView(title: L10n.text("quota.five_hour"))
+    private let weeklyRow = QuotaRowView(title: L10n.text("quota.weekly"))
+    private let statusLabel = NSTextField(labelWithString: L10n.text("status.waiting"))
+    private let refreshButton = NSButton(title: L10n.text("button.refresh"), target: nil, action: nil)
+    private let copyErrorButton = NSButton(title: L10n.text("button.copy_error"), target: nil, action: nil)
+    private let copyLogButton = NSButton(title: L10n.text("button.copy_log"), target: nil, action: nil)
+    private let quitButton = NSButton(title: L10n.text("button.quit"), target: nil, action: nil)
 
     override func loadView() {
-        view = NSView(frame: NSRect(x: 0, y: 0, width: 360, height: 190))
+        view = NSView(frame: NSRect(x: 0, y: 0, width: 440, height: 190))
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
@@ -176,7 +175,7 @@ final class QuotaPopoverViewController: NSViewController {
         stack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(stack)
 
-        let title = NSTextField(labelWithString: "Codex 额度")
+        let title = NSTextField(labelWithString: L10n.text("app.title"))
         title.font = .systemFont(ofSize: 15, weight: .semibold)
 
         statusLabel.font = .systemFont(ofSize: 11)
@@ -233,13 +232,13 @@ final class QuotaPopoverViewController: NSViewController {
         copyErrorButton.isEnabled = state.errorMessage != nil
 
         if state.isRefreshing {
-            statusLabel.stringValue = "刷新中"
+            statusLabel.stringValue = L10n.text("status.refreshing")
         } else if let error = state.errorMessage {
             statusLabel.stringValue = error
         } else if let fetchedAt = state.snapshot?.fetchedAt {
-            statusLabel.stringValue = "更新 \(DateFormatters.time.string(from: fetchedAt))"
+            statusLabel.stringValue = L10n.updating(DateFormatters.time.string(from: fetchedAt))
         } else {
-            statusLabel.stringValue = "未加载"
+            statusLabel.stringValue = L10n.text("status.not_loaded")
         }
     }
 
@@ -264,7 +263,7 @@ final class QuotaRowView: NSView {
     private let titleLabel: NSTextField
     private let batteryView = SegmentedBatteryView()
     private let percentLabel = NSTextField(labelWithString: "--%")
-    private let resetLabel = NSTextField(labelWithString: "重置 --")
+    private let resetLabel = NSTextField(labelWithString: L10n.text("quota.reset.placeholder"))
 
     init(title: String) {
         self.titleLabel = NSTextField(labelWithString: title)
@@ -313,16 +312,16 @@ final class QuotaRowView: NSView {
         guard let limit else {
             batteryView.remainingPercent = nil
             percentLabel.stringValue = "--%"
-            resetLabel.stringValue = "重置 --"
+            resetLabel.stringValue = L10n.text("quota.reset.placeholder")
             return
         }
 
         batteryView.remainingPercent = limit.remainingPercent
         percentLabel.stringValue = "\(Int(round(limit.remainingPercent)))%"
         if let resetDate = limit.resetDate {
-            resetLabel.stringValue = "重置 \(DateFormatters.reset.string(from: resetDate))"
+            resetLabel.stringValue = L10n.reset(DateFormatters.reset.string(from: resetDate))
         } else {
-            resetLabel.stringValue = "重置 --"
+            resetLabel.stringValue = L10n.text("quota.reset.placeholder")
         }
     }
 }
@@ -380,8 +379,8 @@ final class SegmentedBatteryView: NSView {
 }
 
 final class QuotasTouchBarController: NSObject, NSTouchBarDelegate {
-    private let fiveHourView = TouchBarQuotaView(title: "5小时")
-    private let weeklyView = TouchBarQuotaView(title: "周限额")
+    private let fiveHourView = TouchBarQuotaView(title: L10n.text("quota.five_hour"))
+    private let weeklyView = TouchBarQuotaView(title: L10n.text("quota.weekly"))
 
     func makeTouchBar() -> NSTouchBar {
         let touchBar = NSTouchBar()

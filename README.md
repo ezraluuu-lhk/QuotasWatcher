@@ -6,6 +6,7 @@ QuotasWatch is a small macOS menu bar app for Codex quota visibility. It uses Sw
 
 ```bash
 swift test
+Scripts/check-localizations.sh
 swift build -c release
 Scripts/package-app.sh
 ```
@@ -59,6 +60,27 @@ The popover and right-click menu include `复制错误` and `复制日志` actio
 ```text
 ~/Library/Application Support/QuotasWatch/QuotasWatch.log
 ```
+
+## Localization
+
+QuotasWatch uses native macOS `.lproj` localization files:
+
+```text
+Sources/QuotasWatch/Resources/en.lproj/Localizable.strings
+Sources/QuotasWatch/Resources/zh-Hans.lproj/Localizable.strings
+```
+
+Run this before opening a pull request:
+
+```bash
+Scripts/check-localizations.sh
+```
+
+The packaging script copies these `.lproj` directories into `dist/QuotasWatch.app/Contents/Resources`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
 
 ## Troubleshooting
 
