@@ -83,6 +83,18 @@ The popover and right-click menu include `Copy Error` and `Copy Log` actions for
 ~/Library/Application Support/QuotasWatcher/QuotasWatcher.log
 ```
 
+## Bark Notifications
+
+QuotasWatcher can send quota-reset notifications to an iPhone through [Bark](https://github.com/Finb/Bark). Open `Bark…` from the popover or right-click menu, enter the device key or its `https://api.day.app/<key>/` URL, and use `Test Connection` to verify delivery.
+
+Notification types can be enabled independently:
+
+- Scheduled 5-hour resets
+- Scheduled weekly resets
+- Other/free resets, detected when remaining quota rises by at least 10 percentage points before its scheduled reset
+
+The Bark key is stored locally in macOS app preferences. QuotasWatcher never writes the key or complete push URL to its log. Reset comparisons are limited to successful quota observations no more than 30 minutes apart, so an old reset is not reported after a long shutdown.
+
 ## Localization
 
 QuotasWatcher uses native macOS `.lproj` localization files:

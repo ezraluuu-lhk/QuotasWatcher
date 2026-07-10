@@ -87,7 +87,7 @@ public final class CodexAppServerClient {
 
         do {
             try send(
-                #"{"id":1,"method":"initialize","params":{"clientInfo":{"name":"QuotasWatcher","title":"QuotasWatcher","version":"0.1.0"},"capabilities":{"experimentalApi":true}}}"#,
+                #"{"id":1,"method":"initialize","params":{"clientInfo":{"name":"QuotasWatcher","title":"QuotasWatcher","version":"0.2.0"},"capabilities":{"experimentalApi":true}}}"#,
                 to: stdin
             )
             log.append("sent: initialize id=1")

@@ -1,4 +1,5 @@
 import Foundation
+import QuotasWatcherCore
 
 enum L10n {
     static func text(_ key: String) -> String {
@@ -23,5 +24,33 @@ enum L10n {
             return String(format: text("status.item.unavailable.format"), suffix)
         }
         return String(format: text("status.item.percent.format"), remainingPercent, suffix)
+    }
+
+    static func barkNotification(for event: QuotaResetEvent) -> (title: String, body: String) {
+        switch event.kind {
+        case .fiveHourReset:
+            let remaining = Int(round(event.changes.first?.currentRemainingPercent ?? 0))
+            return (
+                text("bark.push.five_hour.title"),
+                String(format: text("bark.push.scheduled.body.format"), remaining)
+            )
+        case .weeklyReset:
+            let remaining = Int(round(event.changes.first?.currentRemainingPercent ?? 0))
+            return (
+                text("bark.push.weekly.title"),
+                String(format: text("bark.push.scheduled.body.format"), remaining)
+            )
+        case .otherReset:
+            let changes = event.changes.map { change in
+                let label = change.kind == .fiveHour ? text("quota.five_hour") : text("quota.weekly")
+                return String(
+                    format: text("bark.push.other.change.format"),
+                    label,
+                    Int(round(change.previousRemainingPercent)),
+                    Int(round(change.currentRemainingPercent))
+                )
+            }
+            return (text("bark.push.other.title"), changes.joined(separator: "\n"))
+        }
     }
 }

@@ -7,8 +7,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let viewController = QuotaPopoverViewController()
     private let client = CodexAppServerClient()
     private let touchBarController = QuotasTouchBarController()
+    private let barkClient = BarkPushClient()
+    private let barkPreferences = BarkNotificationPreferences()
     private var state = QuotaRefreshState()
     private var refreshTimer: Timer?
+    private lazy var barkSettingsController = BarkSettingsController(
+        preferences: barkPreferences,
+        client: barkClient
+    )
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -38,12 +44,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func configurePopover() {
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 440, height: 190)
+        popover.contentSize = NSSize(width: 470, height: 190)
         popover.contentViewController = viewController
         viewController.touchBar = touchBarController.makeTouchBar()
         viewController.onRefresh = { [weak self] in self?.refresh() }
         viewController.onCopyError = { [weak self] in self?.copyCurrentError() }
         viewController.onCopyLog = { self.copyLog() }
+        viewController.onBarkSettings = { [weak self] in self?.barkSettingsController.showWindow() }
         viewController.onQuit = { NSApp.terminate(nil) }
         viewController.update(with: state)
     }
@@ -68,6 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: L10n.text("button.refresh"), action: #selector(refreshFromMenu), keyEquivalent: "r"))
         menu.addItem(NSMenuItem(title: L10n.text("button.copy_error"), action: #selector(copyErrorFromMenu), keyEquivalent: "e"))
         menu.addItem(NSMenuItem(title: L10n.text("button.copy_log"), action: #selector(copyLogFromMenu), keyEquivalent: "l"))
+        menu.addItem(NSMenuItem(title: L10n.text("button.bark"), action: #selector(showBarkSettingsFromMenu), keyEquivalent: "b"))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: String(format: L10n.text("menu.quit.format"), "QuotasWatcher"), action: #selector(quitFromMenu), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
@@ -92,6 +100,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         copyLog()
     }
 
+    @objc private func showBarkSettingsFromMenu() {
+        barkSettingsController.showWindow()
+    }
+
     private func refresh() {
         guard !state.isRefreshing else {
             return
@@ -104,9 +116,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 let snapshot = try await client.fetchRateLimits()
                 await MainActor.run {
+                    let previousObservation = barkPreferences.loadLastObservation()
+                    let resetEvents = previousObservation.map {
+                        QuotaResetDetector.events(previous: $0, current: snapshot)
+                    } ?? []
                     state.finishRefresh(with: .success(snapshot))
+                    barkPreferences.saveLastObservation(snapshot)
                     AppLog.shared.append("Refresh succeeded.")
                     render()
+                    sendBarkNotifications(resetEvents)
                 }
             } catch {
                 await MainActor.run {
@@ -128,6 +146,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let text = AppLog.shared.readText()
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text.isEmpty ? L10n.text("clipboard.no_log") : text, forType: .string)
+    }
+
+    private func sendBarkNotifications(_ events: [QuotaResetEvent]) {
+        let settings = barkPreferences.loadSettings()
+        guard !settings.deviceKey.isEmpty else {
+            return
+        }
+
+        for event in events where settings.isEnabled(event.kind) {
+            let content = L10n.barkNotification(for: event)
+            Task {
+                do {
+                    try await barkClient.send(
+                        deviceKey: settings.deviceKey,
+                        title: content.title,
+                        body: content.body
+                    )
+                    AppLog.shared.append("Bark notification sent for \(event.kind.rawValue).")
+                } catch {
+                    AppLog.shared.append("Bark notification failed for \(event.kind.rawValue): \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     private func render() {
@@ -153,6 +194,7 @@ final class QuotaPopoverViewController: NSViewController {
     var onRefresh: (() -> Void)?
     var onCopyError: (() -> Void)?
     var onCopyLog: (() -> Void)?
+    var onBarkSettings: (() -> Void)?
     var onQuit: (() -> Void)?
 
     private let fiveHourRow = QuotaRowView(title: L10n.text("quota.five_hour"))
@@ -161,10 +203,11 @@ final class QuotaPopoverViewController: NSViewController {
     private let refreshButton = NSButton(title: L10n.text("button.refresh"), target: nil, action: nil)
     private let copyErrorButton = NSButton(title: L10n.text("button.copy_error"), target: nil, action: nil)
     private let copyLogButton = NSButton(title: L10n.text("button.copy_log"), target: nil, action: nil)
+    private let barkButton = NSButton(title: L10n.text("button.bark"), target: nil, action: nil)
     private let quitButton = NSButton(title: L10n.text("button.quit"), target: nil, action: nil)
 
     override func loadView() {
-        view = NSView(frame: NSRect(x: 0, y: 0, width: 440, height: 190))
+        view = NSView(frame: NSRect(x: 0, y: 0, width: 470, height: 190))
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
@@ -195,6 +238,7 @@ final class QuotaPopoverViewController: NSViewController {
         footer.addArrangedSubview(refreshButton)
         footer.addArrangedSubview(copyErrorButton)
         footer.addArrangedSubview(copyLogButton)
+        footer.addArrangedSubview(barkButton)
         footer.addArrangedSubview(quitButton)
 
         refreshButton.bezelStyle = .rounded
@@ -206,6 +250,9 @@ final class QuotaPopoverViewController: NSViewController {
         copyLogButton.bezelStyle = .rounded
         copyLogButton.target = self
         copyLogButton.action = #selector(copyLogClicked)
+        barkButton.bezelStyle = .rounded
+        barkButton.target = self
+        barkButton.action = #selector(barkClicked)
         quitButton.bezelStyle = .rounded
         quitButton.target = self
         quitButton.action = #selector(quitClicked)
@@ -252,6 +299,10 @@ final class QuotaPopoverViewController: NSViewController {
 
     @objc private func copyLogClicked() {
         onCopyLog?()
+    }
+
+    @objc private func barkClicked() {
+        onBarkSettings?()
     }
 
     @objc private func quitClicked() {
