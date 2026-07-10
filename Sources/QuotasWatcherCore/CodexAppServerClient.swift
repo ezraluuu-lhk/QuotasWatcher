@@ -54,6 +54,7 @@ public final class CodexAppServerClient {
         process.standardInput = stdin
         process.standardOutput = stdout
         process.standardError = stderr
+        process.environment = CodexBinaryResolver.launchEnvironment(for: command)
 
         stdout.fileHandleForReading.readabilityHandler = { handle in
             let data = handle.availableData
@@ -87,11 +88,17 @@ public final class CodexAppServerClient {
 
         do {
             try send(
-                #"{"id":1,"method":"initialize","params":{"clientInfo":{"name":"QuotasWatcher","title":"QuotasWatcher","version":"0.2.0"},"capabilities":{"experimentalApi":true}}}"#,
+                #"{"id":1,"method":"initialize","params":{"clientInfo":{"name":"QuotasWatcher","title":"QuotasWatcher","version":"0.2.1"},"capabilities":{"experimentalApi":true}}}"#,
                 to: stdin
             )
             log.append("sent: initialize id=1")
-            try waitForResponse(id: .int(1), stdoutBuffer: stdoutBuffer, process: process, deadline: deadline)
+            try waitForResponse(
+                id: .int(1),
+                stdoutBuffer: stdoutBuffer,
+                stderrBuffer: stderrBuffer,
+                process: process,
+                deadline: deadline
+            )
             log.append("received: initialize id=1")
 
             try send(#"{"id":2,"method":"account/rateLimits/read","params":null}"#, to: stdin)
@@ -149,7 +156,13 @@ public final class CodexAppServerClient {
         }
     }
 
-    private func waitForResponse(id: JSONRPCRequestID, stdoutBuffer: LockedData, process: Process, deadline: Date) throws {
+    private func waitForResponse(
+        id: JSONRPCRequestID,
+        stdoutBuffer: LockedData,
+        stderrBuffer: LockedData,
+        process: Process,
+        deadline: Date
+    ) throws {
         while Date() < deadline {
             let stdoutText = String(data: stdoutBuffer.data(), encoding: .utf8) ?? ""
             switch JSONRPCParser.responseStatus(stdout: stdoutText, id: id) {
@@ -159,7 +172,9 @@ public final class CodexAppServerClient {
                 throw CodexAppServerError.rpcError(message)
             case .notFound:
                 if !process.isRunning {
-                    throw CodexAppServerError.missingRateLimitResponse("stdout: \(stdoutText)")
+                    let stderrText = String(data: stderrBuffer.data(), encoding: .utf8) ?? ""
+                    let details = stderrText.isEmpty ? "stdout: \(stdoutText)" : "stderr: \(stderrText)"
+                    throw CodexAppServerError.missingRateLimitResponse(details)
                 }
             }
             Thread.sleep(forTimeInterval: 0.05)
@@ -200,6 +215,32 @@ public enum CodexBinaryResolver {
         }
 
         throw CodexAppServerError.codexBinaryNotFound
+    }
+
+    static func launchEnvironment(
+        for command: Command,
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> [String: String] {
+        var launchEnvironment = environment
+        let inheritedPaths = environment["PATH", default: ""]
+            .split(separator: ":")
+            .map(String.init)
+        let preferredPaths = [
+            command.executableURL.deletingLastPathComponent().path,
+            "/usr/local/bin",
+            "/opt/homebrew/bin",
+            "/usr/bin",
+            "/bin",
+            "/usr/sbin",
+            "/sbin"
+        ]
+
+        launchEnvironment["PATH"] = (preferredPaths + inheritedPaths).reduce(into: [String]()) { paths, path in
+            if !path.isEmpty && !paths.contains(path) {
+                paths.append(path)
+            }
+        }.joined(separator: ":")
+        return launchEnvironment
     }
 }
 

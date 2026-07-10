@@ -11,6 +11,13 @@
 "button.save" = "保存";
 "button.cancel" = "取消";
 "menu.quit.format" = "退出 %@";
+"menu.edit" = "编辑";
+"menu.undo" = "撤销";
+"menu.redo" = "重做";
+"menu.cut" = "剪切";
+"menu.copy" = "复制";
+"menu.paste" = "粘贴";
+"menu.select_all" = "全选";
 "status.waiting" = "等待刷新";
 "status.refreshing" = "刷新中";
 "status.not_loaded" = "未加载";

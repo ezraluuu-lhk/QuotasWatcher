@@ -11,6 +11,13 @@
 "button.save" = "Save";
 "button.cancel" = "Cancel";
 "menu.quit.format" = "Quit %@";
+"menu.edit" = "Edit";
+"menu.undo" = "Undo";
+"menu.redo" = "Redo";
+"menu.cut" = "Cut";
+"menu.copy" = "Copy";
+"menu.paste" = "Paste";
+"menu.select_all" = "Select All";
 "status.waiting" = "Waiting";
 "status.refreshing" = "Refreshing";
 "status.not_loaded" = "Not loaded";

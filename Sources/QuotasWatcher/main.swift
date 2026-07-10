@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        configureApplicationMenu()
         configureStatusItem()
         configurePopover()
         NSApp.touchBar = touchBarController.makeTouchBar()
@@ -26,6 +27,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         AppLog.shared.append("Application launched. Log file: \(AppLog.shared.fileURL.path)")
         refresh()
+    }
+
+    private func configureApplicationMenu() {
+        let mainMenu = NSMenu()
+
+        let applicationMenuItem = NSMenuItem()
+        mainMenu.addItem(applicationMenuItem)
+        let applicationMenu = NSMenu(title: "QuotasWatcher")
+        applicationMenu.addItem(NSMenuItem(
+            title: String(format: L10n.text("menu.quit.format"), "QuotasWatcher"),
+            action: #selector(NSApplication.terminate(_:)),
+            keyEquivalent: "q"
+        ))
+        applicationMenuItem.submenu = applicationMenu
+
+        let editMenuItem = NSMenuItem()
+        mainMenu.addItem(editMenuItem)
+        let editMenu = NSMenu(title: L10n.text("menu.edit"))
+        editMenu.addItem(NSMenuItem(title: L10n.text("menu.undo"), action: Selector(("undo:")), keyEquivalent: "z"))
+        let redoItem = NSMenuItem(title: L10n.text("menu.redo"), action: Selector(("redo:")), keyEquivalent: "Z")
+        redoItem.keyEquivalentModifierMask = [.command, .shift]
+        editMenu.addItem(redoItem)
+        editMenu.addItem(.separator())
+        editMenu.addItem(NSMenuItem(title: L10n.text("menu.cut"), action: #selector(NSText.cut(_:)), keyEquivalent: "x"))
+        editMenu.addItem(NSMenuItem(title: L10n.text("menu.copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c"))
+        editMenu.addItem(NSMenuItem(title: L10n.text("menu.paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v"))
+        editMenu.addItem(NSMenuItem(title: L10n.text("menu.select_all"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a"))
+        let controlPasteItem = NSMenuItem(title: L10n.text("menu.paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        controlPasteItem.keyEquivalentModifierMask = [.control]
+        controlPasteItem.isHidden = true
+        controlPasteItem.allowsKeyEquivalentWhenHidden = true
+        editMenu.addItem(controlPasteItem)
+        editMenuItem.submenu = editMenu
+
+        NSApp.mainMenu = mainMenu
     }
 
     func applicationWillTerminate(_ notification: Notification) {

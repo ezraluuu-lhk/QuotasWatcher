@@ -83,6 +83,24 @@ final class QuotaParsingTests: XCTestCase {
         XCTAssertEqual(state.errorMessage, "network unavailable")
     }
 
+    func testCodexLaunchEnvironmentAddsLauncherAndStandardBinaryPaths() {
+        let command = CodexBinaryResolver.Command(
+            executableURL: URL(fileURLWithPath: "/custom/bin/codex"),
+            arguments: []
+        )
+
+        let environment = CodexBinaryResolver.launchEnvironment(
+            for: command,
+            environment: ["PATH": "/minimal/bin", "HOME": "/tmp/home"]
+        )
+
+        XCTAssertEqual(
+            environment["PATH"],
+            "/custom/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin:/minimal/bin"
+        )
+        XCTAssertEqual(environment["HOME"], "/tmp/home")
+    }
+
     private func decode(_ json: String) throws -> GetAccountRateLimitsResponse {
         try JSONDecoder().decode(GetAccountRateLimitsResponse.self, from: Data(json.utf8))
     }
