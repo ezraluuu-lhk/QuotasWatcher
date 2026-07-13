@@ -26,6 +26,11 @@ enum L10n {
         return String(format: text("status.item.percent.format"), remainingPercent, suffix)
     }
 
+    static func weeklyStatusTitle(remainingPercent: Int, isRefreshing: Bool) -> String {
+        let suffix = isRefreshing ? " ..." : ""
+        return String(format: text("status.item.weekly.percent.format"), remainingPercent, suffix)
+    }
+
     static func barkNotification(for event: QuotaResetEvent) -> (title: String, body: String) {
         switch event.kind {
         case .fiveHourReset:

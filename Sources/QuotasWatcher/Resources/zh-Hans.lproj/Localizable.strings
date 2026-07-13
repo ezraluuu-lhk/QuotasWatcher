@@ -1,6 +1,7 @@
 "app.title" = "Codex 额度";
 "quota.five_hour" = "5小时";
 "quota.weekly" = "周限额";
+"quota.five_hour.unavailable" = "5 小时额度暂不可用，菜单栏当前显示周额度。";
 "quota.reset.placeholder" = "重置 --";
 "quota.reset.format" = "重置 %@";
 "button.refresh" = "刷新";
@@ -23,6 +24,7 @@
 "status.not_loaded" = "未加载";
 "status.updated.format" = "更新 %@";
 "status.item.percent.format" = "Codex %d%%%@";
+"status.item.weekly.percent.format" = "Codex %d%% 周%@";
 "status.item.unavailable.format" = "Codex --%%%@";
 "clipboard.no_error" = "当前没有 QuotasWatcher 错误。";
 "clipboard.no_log" = "当前没有 QuotasWatcher 日志。";

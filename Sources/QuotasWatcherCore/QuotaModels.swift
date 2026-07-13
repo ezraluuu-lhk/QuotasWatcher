@@ -54,9 +54,15 @@ public struct QuotaSnapshot: Codable, Equatable {
 public enum QuotaParser {
     public static func snapshot(from response: GetAccountRateLimitsResponse, fetchedAt: Date = Date()) -> QuotaSnapshot {
         let selected = response.rateLimitsByLimitId?["codex"] ?? response.rateLimits
+        let windows = [selected.primary, selected.secondary].compactMap { $0 }
+        let fiveHourWindow = windows.first { $0.windowDurationMins == 5 * 60 }
+            ?? selected.primary.flatMap { $0.windowDurationMins == nil ? $0 : nil }
+        let weeklyWindow = windows.first { $0.windowDurationMins == 7 * 24 * 60 }
+            ?? selected.secondary.flatMap { $0.windowDurationMins == nil ? $0 : nil }
+
         return QuotaSnapshot(
-            fiveHour: selected.primary.map { QuotaLimit(kind: .fiveHour, window: $0) },
-            weekly: selected.secondary.map { QuotaLimit(kind: .weekly, window: $0) },
+            fiveHour: fiveHourWindow.map { QuotaLimit(kind: .fiveHour, window: $0) },
+            weekly: weeklyWindow.map { QuotaLimit(kind: .weekly, window: $0) },
             fetchedAt: fetchedAt
         )
     }

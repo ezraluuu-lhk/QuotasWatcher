@@ -66,7 +66,7 @@ Binary lookup order:
 
 ## Behavior
 
-The menu bar item shows the 5-hour quota remaining percentage. The popover shows two segmented battery rows:
+The menu bar item shows the 5-hour quota remaining percentage. If Codex does not return a 5-hour window, it falls back to weekly usage, marks the menu bar value with `W`, and shows an explanatory banner in the popover. The popover shows two segmented battery rows:
 
 - `5h`
 - `Weekly`

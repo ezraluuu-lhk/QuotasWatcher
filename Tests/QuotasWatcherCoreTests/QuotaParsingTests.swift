@@ -67,6 +67,61 @@ final class QuotaParsingTests: XCTestCase {
         XCTAssertNil(snapshot.weekly)
     }
 
+    func testClassifiesWeeklyOnlyPrimaryWindowByDuration() throws {
+        let response = try decode("""
+        {
+          "rateLimits": {
+            "limitId": "codex",
+            "limitName": null,
+            "primary": { "usedPercent": 1, "windowDurationMins": 10080, "resetsAt": 1784507267 },
+            "secondary": null
+          },
+          "rateLimitsByLimitId": null
+        }
+        """)
+
+        let snapshot = QuotaParser.snapshot(from: response)
+        XCTAssertNil(snapshot.fiveHour)
+        XCTAssertEqual(snapshot.weekly?.remainingPercent, 99)
+        XCTAssertEqual(snapshot.weekly?.windowDurationMins, 10_080)
+    }
+
+    func testClassifiesWindowsByDurationInsteadOfPosition() throws {
+        let response = try decode("""
+        {
+          "rateLimits": {
+            "limitId": "codex",
+            "limitName": "Codex",
+            "primary": { "usedPercent": 40, "windowDurationMins": 10080, "resetsAt": 2000 },
+            "secondary": { "usedPercent": 25, "windowDurationMins": 300, "resetsAt": 1000 }
+          },
+          "rateLimitsByLimitId": null
+        }
+        """)
+
+        let snapshot = QuotaParser.snapshot(from: response)
+        XCTAssertEqual(snapshot.fiveHour?.remainingPercent, 75)
+        XCTAssertEqual(snapshot.weekly?.remainingPercent, 60)
+    }
+
+    func testFallsBackToLegacyPositionsWhenDurationsAreMissing() throws {
+        let response = try decode("""
+        {
+          "rateLimits": {
+            "limitId": "codex",
+            "limitName": "Codex",
+            "primary": { "usedPercent": 25, "windowDurationMins": null, "resetsAt": 1000 },
+            "secondary": { "usedPercent": 40, "windowDurationMins": null, "resetsAt": 2000 }
+          },
+          "rateLimitsByLimitId": null
+        }
+        """)
+
+        let snapshot = QuotaParser.snapshot(from: response)
+        XCTAssertEqual(snapshot.fiveHour?.remainingPercent, 75)
+        XCTAssertEqual(snapshot.weekly?.remainingPercent, 60)
+    }
+
     func testFailedRefreshPreservesPreviousSnapshot() {
         let original = QuotaSnapshot(
             fiveHour: QuotaLimit(kind: .fiveHour, window: RateLimitWindow(usedPercent: 20, windowDurationMins: 300, resetsAt: nil)),

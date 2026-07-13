@@ -1,6 +1,7 @@
 "app.title" = "Codex Quota";
 "quota.five_hour" = "5h";
 "quota.weekly" = "Weekly";
+"quota.five_hour.unavailable" = "5-hour limit unavailable — weekly usage is shown in the menu bar.";
 "quota.reset.placeholder" = "Reset --";
 "quota.reset.format" = "Reset %@";
 "button.refresh" = "Refresh";
@@ -23,6 +24,7 @@
 "status.not_loaded" = "Not loaded";
 "status.updated.format" = "Updated %@";
 "status.item.percent.format" = "Codex %d%%%@";
+"status.item.weekly.percent.format" = "Codex %d%% W%@";
 "status.item.unavailable.format" = "Codex --%%%@";
 "clipboard.no_error" = "No current QuotasWatcher error.";
 "clipboard.no_log" = "No QuotasWatcher log entries.";

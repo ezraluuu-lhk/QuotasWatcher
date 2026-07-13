@@ -220,6 +220,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let remaining = state.snapshot?.fiveHour?.remainingPercent {
             button.title = L10n.statusTitle(remainingPercent: Int(round(remaining)), isRefreshing: state.isRefreshing)
+        } else if let remaining = state.snapshot?.weekly?.remainingPercent {
+            button.title = L10n.weeklyStatusTitle(remainingPercent: Int(round(remaining)), isRefreshing: state.isRefreshing)
         } else {
             button.title = L10n.statusTitle(remainingPercent: nil, isRefreshing: state.isRefreshing)
         }
@@ -235,6 +237,7 @@ final class QuotaPopoverViewController: NSViewController {
 
     private let fiveHourRow = QuotaRowView(title: L10n.text("quota.five_hour"))
     private let weeklyRow = QuotaRowView(title: L10n.text("quota.weekly"))
+    private let fiveHourUnavailableBanner = QuotaBannerView(text: L10n.text("quota.five_hour.unavailable"))
     private let statusLabel = NSTextField(labelWithString: L10n.text("status.waiting"))
     private let refreshButton = NSButton(title: L10n.text("button.refresh"), target: nil, action: nil)
     private let copyErrorButton = NSButton(title: L10n.text("button.copy_error"), target: nil, action: nil)
@@ -294,15 +297,18 @@ final class QuotaPopoverViewController: NSViewController {
         quitButton.action = #selector(quitClicked)
 
         stack.addArrangedSubview(header)
+        stack.addArrangedSubview(fiveHourUnavailableBanner)
         stack.addArrangedSubview(fiveHourRow)
         stack.addArrangedSubview(weeklyRow)
         stack.addArrangedSubview(footer)
+        fiveHourUnavailableBanner.isHidden = true
 
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             stack.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             stack.topAnchor.constraint(equalTo: view.topAnchor),
             stack.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            fiveHourUnavailableBanner.heightAnchor.constraint(equalToConstant: 34),
             fiveHourRow.heightAnchor.constraint(equalToConstant: 44),
             weeklyRow.heightAnchor.constraint(equalToConstant: 44)
         ])
@@ -311,6 +317,9 @@ final class QuotaPopoverViewController: NSViewController {
     func update(with state: QuotaRefreshState) {
         fiveHourRow.update(with: state.snapshot?.fiveHour)
         weeklyRow.update(with: state.snapshot?.weekly)
+        let isShowingWeeklyFallback = state.snapshot?.fiveHour == nil && state.snapshot?.weekly != nil
+        fiveHourUnavailableBanner.isHidden = !isShowingWeeklyFallback
+        preferredContentSize = NSSize(width: 470, height: isShowingWeeklyFallback ? 238 : 190)
         refreshButton.isEnabled = !state.isRefreshing
         copyErrorButton.isEnabled = state.errorMessage != nil
 
@@ -343,6 +352,32 @@ final class QuotaPopoverViewController: NSViewController {
 
     @objc private func quitClicked() {
         onQuit?()
+    }
+}
+
+final class QuotaBannerView: NSView {
+    init(text: String) {
+        super.init(frame: .zero)
+        translatesAutoresizingMaskIntoConstraints = false
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.systemBlue.withAlphaComponent(0.12).cgColor
+        layer?.cornerRadius = 6
+
+        let label = NSTextField(wrappingLabelWithString: text)
+        label.font = .systemFont(ofSize: 11, weight: .medium)
+        label.textColor = .labelColor
+        label.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(label)
+
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+            label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+            label.centerYAnchor.constraint(equalTo: centerYAnchor)
+        ])
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
