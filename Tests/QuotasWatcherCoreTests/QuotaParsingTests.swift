@@ -20,6 +20,48 @@ final class QuotaParsingTests: XCTestCase {
         XCTAssertEqual(snapshot.fiveHour?.resetDate, Date(timeIntervalSince1970: 1000))
         XCTAssertEqual(snapshot.weekly?.remainingPercent, 60)
         XCTAssertEqual(snapshot.weekly?.windowDurationMins, 10080)
+        XCTAssertNil(snapshot.availableResetCount)
+    }
+
+    func testDecodesAvailableRateLimitResetCount() throws {
+        let response = try decode("""
+        {
+          "rateLimits": {
+            "limitId": "codex",
+            "limitName": "Codex",
+            "primary": { "usedPercent": 25, "windowDurationMins": 300, "resetsAt": 1000 },
+            "secondary": null
+          },
+          "rateLimitsByLimitId": null,
+          "rateLimitResetCredits": {
+            "availableCount": 2,
+            "credits": [
+              { "id": "ignored-by-this-client", "status": "available" }
+            ]
+          }
+        }
+        """)
+
+        let snapshot = QuotaParser.snapshot(from: response)
+        XCTAssertEqual(snapshot.availableResetCount, 2)
+    }
+
+    func testHandlesNullRateLimitResetCredits() throws {
+        let response = try decode("""
+        {
+          "rateLimits": {
+            "limitId": "codex",
+            "limitName": "Codex",
+            "primary": null,
+            "secondary": null
+          },
+          "rateLimitsByLimitId": null,
+          "rateLimitResetCredits": null
+        }
+        """)
+
+        let snapshot = QuotaParser.snapshot(from: response)
+        XCTAssertNil(snapshot.availableResetCount)
     }
 
     func testPrefersCodexBucketFromMultiBucketPayload() throws {

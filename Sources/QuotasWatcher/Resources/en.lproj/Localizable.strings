@@ -4,6 +4,8 @@
 "quota.five_hour.unavailable" = "5-hour limit unavailable — weekly usage is shown in the menu bar.";
 "quota.reset.placeholder" = "Reset --";
 "quota.reset.format" = "Reset %@";
+"quota.resets_available.one.format" = "%d reset available";
+"quota.resets_available.other.format" = "%d resets available";
 "button.refresh" = "Refresh";
 "button.copy_error" = "Copy Error";
 "button.copy_log" = "Copy Log";

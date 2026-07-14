@@ -16,6 +16,11 @@ public struct RateLimitSnapshot: Codable, Equatable {
 public struct GetAccountRateLimitsResponse: Codable, Equatable {
     public let rateLimits: RateLimitSnapshot
     public let rateLimitsByLimitId: [String: RateLimitSnapshot]?
+    public let rateLimitResetCredits: RateLimitResetCreditsSummary?
+}
+
+public struct RateLimitResetCreditsSummary: Codable, Equatable {
+    public let availableCount: Int
 }
 
 public enum QuotaKind: String, Codable, Equatable {
@@ -43,11 +48,18 @@ public struct QuotaSnapshot: Codable, Equatable {
     public let fiveHour: QuotaLimit?
     public let weekly: QuotaLimit?
     public let fetchedAt: Date
+    public let availableResetCount: Int?
 
-    public init(fiveHour: QuotaLimit?, weekly: QuotaLimit?, fetchedAt: Date = Date()) {
+    public init(
+        fiveHour: QuotaLimit?,
+        weekly: QuotaLimit?,
+        fetchedAt: Date = Date(),
+        availableResetCount: Int? = nil
+    ) {
         self.fiveHour = fiveHour
         self.weekly = weekly
         self.fetchedAt = fetchedAt
+        self.availableResetCount = availableResetCount
     }
 }
 
@@ -63,7 +75,8 @@ public enum QuotaParser {
         return QuotaSnapshot(
             fiveHour: fiveHourWindow.map { QuotaLimit(kind: .fiveHour, window: $0) },
             weekly: weeklyWindow.map { QuotaLimit(kind: .weekly, window: $0) },
-            fetchedAt: fetchedAt
+            fetchedAt: fetchedAt,
+            availableResetCount: response.rateLimitResetCredits?.availableCount
         )
     }
 }

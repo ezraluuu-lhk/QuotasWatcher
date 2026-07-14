@@ -71,7 +71,7 @@ The menu bar item shows the 5-hour quota remaining percentage. If Codex does not
 - `5h`
 - `Weekly`
 
-Each row displays remaining percentage and reset time. Remaining quota is calculated as `100 - usedPercent`. Refreshes keep the previous data visible until a new valid response arrives. The app refreshes every 5 minutes and also provides manual refresh plus quit actions.
+Each row displays remaining percentage and reset time. When Codex reports banked rate-limit resets, the popover header also shows how many are available; resets must still be redeemed in Codex itself. Remaining quota is calculated as `100 - usedPercent`. Refreshes keep the previous data visible until a new valid response arrives. The app refreshes every 5 minutes and also provides manual refresh plus quit actions.
 
 After launch, look for `Codex --%` or `Codex NN%` in the macOS menu bar near the clock. Click it to open the quota popover. Right-click it for refresh and quit actions.
 

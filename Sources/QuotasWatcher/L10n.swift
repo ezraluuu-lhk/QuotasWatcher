@@ -18,6 +18,11 @@ enum L10n {
         String(format: text("quota.reset.format"), time)
     }
 
+    static func resetsAvailable(_ count: Int) -> String {
+        let key = count == 1 ? "quota.resets_available.one.format" : "quota.resets_available.other.format"
+        return String(format: text(key), count)
+    }
+
     static func statusTitle(remainingPercent: Int?, isRefreshing: Bool) -> String {
         let suffix = isRefreshing ? " ..." : ""
         guard let remainingPercent else {

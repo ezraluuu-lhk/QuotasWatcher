@@ -238,6 +238,7 @@ final class QuotaPopoverViewController: NSViewController {
     private let fiveHourRow = QuotaRowView(title: L10n.text("quota.five_hour"))
     private let weeklyRow = QuotaRowView(title: L10n.text("quota.weekly"))
     private let fiveHourUnavailableBanner = QuotaBannerView(text: L10n.text("quota.five_hour.unavailable"))
+    private let resetCreditsLabel = NSTextField(labelWithString: "")
     private let statusLabel = NSTextField(labelWithString: L10n.text("status.waiting"))
     private let refreshButton = NSButton(title: L10n.text("button.refresh"), target: nil, action: nil)
     private let copyErrorButton = NSButton(title: L10n.text("button.copy_error"), target: nil, action: nil)
@@ -260,11 +261,15 @@ final class QuotaPopoverViewController: NSViewController {
         let title = NSTextField(labelWithString: L10n.text("app.title"))
         title.font = .systemFont(ofSize: 15, weight: .semibold)
 
+        resetCreditsLabel.font = .systemFont(ofSize: 11, weight: .medium)
+        resetCreditsLabel.textColor = .systemBlue
+        resetCreditsLabel.isHidden = true
+
         statusLabel.font = .systemFont(ofSize: 11)
         statusLabel.textColor = .secondaryLabelColor
         statusLabel.lineBreakMode = .byTruncatingTail
 
-        let header = NSStackView(views: [title, NSView(), statusLabel])
+        let header = NSStackView(views: [title, resetCreditsLabel, NSView(), statusLabel])
         header.orientation = .horizontal
         header.alignment = .centerY
         header.spacing = 8
@@ -315,11 +320,18 @@ final class QuotaPopoverViewController: NSViewController {
     }
 
     func update(with state: QuotaRefreshState) {
+        _ = view
         fiveHourRow.update(with: state.snapshot?.fiveHour)
         weeklyRow.update(with: state.snapshot?.weekly)
         let isShowingWeeklyFallback = state.snapshot?.fiveHour == nil && state.snapshot?.weekly != nil
         fiveHourUnavailableBanner.isHidden = !isShowingWeeklyFallback
         preferredContentSize = NSSize(width: 470, height: isShowingWeeklyFallback ? 238 : 190)
+        if let availableResetCount = state.snapshot?.availableResetCount {
+            resetCreditsLabel.stringValue = L10n.resetsAvailable(availableResetCount)
+            resetCreditsLabel.isHidden = false
+        } else {
+            resetCreditsLabel.isHidden = true
+        }
         refreshButton.isEnabled = !state.isRefreshing
         copyErrorButton.isEnabled = state.errorMessage != nil
 

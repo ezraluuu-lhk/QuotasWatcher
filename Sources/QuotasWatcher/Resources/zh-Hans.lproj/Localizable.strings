@@ -4,6 +4,8 @@
 "quota.five_hour.unavailable" = "5 小时额度暂不可用，菜单栏当前显示周额度。";
 "quota.reset.placeholder" = "重置 --";
 "quota.reset.format" = "重置 %@";
+"quota.resets_available.one.format" = "%d 次重置可用";
+"quota.resets_available.other.format" = "%d 次重置可用";
 "button.refresh" = "刷新";
 "button.copy_error" = "复制错误";
 "button.copy_log" = "复制日志";
