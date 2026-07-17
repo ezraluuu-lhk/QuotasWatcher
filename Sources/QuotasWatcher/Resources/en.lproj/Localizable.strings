@@ -8,7 +8,7 @@
 "quota.resets_available.other.format" = "%d resets available";
 "button.refresh" = "Refresh";
 "button.copy_error" = "Copy Error";
-"button.copy_log" = "Copy Log";
+"button.open_log" = "Open Log";
 "button.bark" = "Bark…";
 "button.quit" = "Quit";
 "button.save" = "Save";
@@ -29,7 +29,6 @@
 "status.item.weekly.percent.format" = "Codex %d%% W%@";
 "status.item.unavailable.format" = "Codex --%%%@";
 "clipboard.no_error" = "No current QuotasWatcher error.";
-"clipboard.no_log" = "No QuotasWatcher log entries.";
 "bark.settings.title" = "Bark Notifications";
 "bark.settings.heading" = "Bark Notifications";
 "bark.settings.description" = "Enter the device key from your Bark push URL, then choose which Codex quota resets should notify you.";
@@ -44,6 +43,7 @@
 "bark.notify.five_hour" = "Notify on 5-hour reset";
 "bark.notify.weekly" = "Notify on weekly reset";
 "bark.notify.other" = "Notify on other/free reset";
+"bark.notify.reset_bank" = "Notify when reset bank increases";
 "bark.validation.key_required" = "Enter a Bark key before enabling notifications.";
 "bark.validation.invalid_key" = "Enter a valid Bark device key or api.day.app URL.";
 "bark.push.five_hour.title" = "Codex 5-hour quota reset";
@@ -51,3 +51,5 @@
 "bark.push.other.title" = "Codex bonus quota detected";
 "bark.push.scheduled.body.format" = "The quota window reset. %d%% remains.";
 "bark.push.other.change.format" = "%@: %d%% → %d%% remaining";
+"bark.push.reset_bank.title" = "Codex reset added";
+"bark.push.reset_bank.body.format" = "Reset bank increased from %d to %d available.";

@@ -4,6 +4,7 @@ public enum QuotaNotificationKind: String, Codable, CaseIterable, Equatable {
     case fiveHourReset
     case weeklyReset
     case otherReset
+    case resetBankIncrease
 }
 
 public struct QuotaResetChange: Equatable {
@@ -21,10 +22,26 @@ public struct QuotaResetChange: Equatable {
 public struct QuotaResetEvent: Equatable {
     public let kind: QuotaNotificationKind
     public let changes: [QuotaResetChange]
+    public let resetBankChange: ResetBankChange?
 
-    public init(kind: QuotaNotificationKind, changes: [QuotaResetChange]) {
+    public init(
+        kind: QuotaNotificationKind,
+        changes: [QuotaResetChange] = [],
+        resetBankChange: ResetBankChange? = nil
+    ) {
         self.kind = kind
         self.changes = changes
+        self.resetBankChange = resetBankChange
+    }
+}
+
+public struct ResetBankChange: Equatable {
+    public let previousCount: Int
+    public let currentCount: Int
+
+    public init(previousCount: Int, currentCount: Int) {
+        self.previousCount = previousCount
+        self.currentCount = currentCount
     }
 }
 
@@ -32,16 +49,29 @@ public enum QuotaResetDetector {
     public static func events(
         previous: QuotaSnapshot,
         current: QuotaSnapshot,
-        maximumObservationInterval: TimeInterval = 30 * 60,
+        maximumScheduledResetObservationInterval: TimeInterval = 30 * 60,
+        maximumOtherResetObservationInterval: TimeInterval = 6 * 60 * 60,
         resetBoundaryTolerance: TimeInterval = 5 * 60,
         otherResetThreshold: Double = 10
     ) -> [QuotaResetEvent] {
         let observationInterval = current.fetchedAt.timeIntervalSince(previous.fetchedAt)
-        guard observationInterval >= 0, observationInterval <= maximumObservationInterval else {
+        guard observationInterval >= 0 else {
             return []
         }
 
         var events: [QuotaResetEvent] = []
+        if let previousCount = previous.availableResetCount,
+           let currentCount = current.availableResetCount,
+           currentCount > previousCount {
+            events.append(QuotaResetEvent(
+                kind: .resetBankIncrease,
+                resetBankChange: ResetBankChange(
+                    previousCount: previousCount,
+                    currentCount: currentCount
+                )
+            ))
+        }
+
         var otherChanges: [QuotaResetChange] = []
 
         inspect(
@@ -49,6 +79,9 @@ public enum QuotaResetDetector {
             previous: previous.fiveHour,
             current: current.fiveHour,
             fetchedAt: current.fetchedAt,
+            observationInterval: observationInterval,
+            maximumScheduledResetObservationInterval: maximumScheduledResetObservationInterval,
+            maximumOtherResetObservationInterval: maximumOtherResetObservationInterval,
             resetBoundaryTolerance: resetBoundaryTolerance,
             otherResetThreshold: otherResetThreshold,
             scheduledKind: .fiveHourReset,
@@ -60,6 +93,9 @@ public enum QuotaResetDetector {
             previous: previous.weekly,
             current: current.weekly,
             fetchedAt: current.fetchedAt,
+            observationInterval: observationInterval,
+            maximumScheduledResetObservationInterval: maximumScheduledResetObservationInterval,
+            maximumOtherResetObservationInterval: maximumOtherResetObservationInterval,
             resetBoundaryTolerance: resetBoundaryTolerance,
             otherResetThreshold: otherResetThreshold,
             scheduledKind: .weeklyReset,
@@ -78,6 +114,9 @@ public enum QuotaResetDetector {
         previous: QuotaLimit?,
         current: QuotaLimit?,
         fetchedAt: Date,
+        observationInterval: TimeInterval,
+        maximumScheduledResetObservationInterval: TimeInterval,
+        maximumOtherResetObservationInterval: TimeInterval,
         resetBoundaryTolerance: TimeInterval,
         otherResetThreshold: Double,
         scheduledKind: QuotaNotificationKind,
@@ -94,7 +133,8 @@ public enum QuotaResetDetector {
             currentRemainingPercent: current.remainingPercent
         )
 
-        if isScheduledReset(
+        if observationInterval <= maximumScheduledResetObservationInterval,
+           isScheduledReset(
             previous: previous,
             current: current,
             fetchedAt: fetchedAt,
@@ -104,8 +144,11 @@ public enum QuotaResetDetector {
             return
         }
 
-        guard current.remainingPercent - previous.remainingPercent >= otherResetThreshold,
+        guard observationInterval <= maximumOtherResetObservationInterval,
+              current.remainingPercent - previous.remainingPercent >= otherResetThreshold,
               let previousResetDate = previous.resetDate,
+              let currentResetDate = current.resetDate,
+              currentResetDate > previousResetDate.addingTimeInterval(resetBoundaryTolerance),
               fetchedAt < previousResetDate.addingTimeInterval(-resetBoundaryTolerance)
         else {
             return
@@ -135,17 +178,20 @@ public struct BarkNotificationSettings: Equatable {
     public var notifyFiveHourReset: Bool
     public var notifyWeeklyReset: Bool
     public var notifyOtherReset: Bool
+    public var notifyResetBankIncrease: Bool
 
     public init(
         deviceKey: String = "",
         notifyFiveHourReset: Bool = false,
         notifyWeeklyReset: Bool = false,
-        notifyOtherReset: Bool = false
+        notifyOtherReset: Bool = false,
+        notifyResetBankIncrease: Bool = false
     ) {
         self.deviceKey = deviceKey
         self.notifyFiveHourReset = notifyFiveHourReset
         self.notifyWeeklyReset = notifyWeeklyReset
         self.notifyOtherReset = notifyOtherReset
+        self.notifyResetBankIncrease = notifyResetBankIncrease
     }
 
     public func isEnabled(_ kind: QuotaNotificationKind) -> Bool {
@@ -156,6 +202,8 @@ public struct BarkNotificationSettings: Equatable {
             return notifyWeeklyReset
         case .otherReset:
             return notifyOtherReset
+        case .resetBankIncrease:
+            return notifyResetBankIncrease
         }
     }
 }
@@ -170,11 +218,15 @@ public final class BarkNotificationPreferences {
     }
 
     public func loadSettings() -> BarkNotificationSettings {
-        BarkNotificationSettings(
+        let resetBankKey = key("notifyResetBankIncrease")
+        let notifyResetBankIncrease = defaults.object(forKey: resetBankKey) as? Bool
+            ?? defaults.bool(forKey: key("notifyOtherReset"))
+        return BarkNotificationSettings(
             deviceKey: defaults.string(forKey: key("deviceKey")) ?? "",
             notifyFiveHourReset: defaults.bool(forKey: key("notifyFiveHourReset")),
             notifyWeeklyReset: defaults.bool(forKey: key("notifyWeeklyReset")),
-            notifyOtherReset: defaults.bool(forKey: key("notifyOtherReset"))
+            notifyOtherReset: defaults.bool(forKey: key("notifyOtherReset")),
+            notifyResetBankIncrease: notifyResetBankIncrease
         )
     }
 
@@ -188,6 +240,7 @@ public final class BarkNotificationPreferences {
         defaults.set(settings.notifyFiveHourReset, forKey: key("notifyFiveHourReset"))
         defaults.set(settings.notifyWeeklyReset, forKey: key("notifyWeeklyReset"))
         defaults.set(settings.notifyOtherReset, forKey: key("notifyOtherReset"))
+        defaults.set(settings.notifyResetBankIncrease, forKey: key("notifyResetBankIncrease"))
     }
 
     public func loadLastObservation() -> QuotaSnapshot? {

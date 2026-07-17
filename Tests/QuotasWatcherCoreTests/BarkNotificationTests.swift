@@ -53,8 +53,8 @@ final class BarkNotificationTests: XCTestCase {
             fetchedAt: 1_000
         )
         let current = snapshot(
-            fiveHour: limit(.fiveHour, remaining: 80, reset: 10_000),
-            weekly: limit(.weekly, remaining: 45, reset: 20_000),
+            fiveHour: limit(.fiveHour, remaining: 80, reset: 30_000),
+            weekly: limit(.weekly, remaining: 45, reset: 40_000),
             fetchedAt: 1_100
         )
 
@@ -71,7 +71,7 @@ final class BarkNotificationTests: XCTestCase {
             fetchedAt: 1_000
         )
         let current = snapshot(
-            fiveHour: limit(.fiveHour, remaining: 29.9, reset: 10_000),
+            fiveHour: limit(.fiveHour, remaining: 29.9, reset: 20_000),
             weekly: nil,
             fetchedAt: 1_100
         )
@@ -94,7 +94,55 @@ final class BarkNotificationTests: XCTestCase {
         XCTAssertTrue(QuotaResetDetector.events(previous: previous, current: current).isEmpty)
     }
 
-    func testIgnoresObservationsMoreThanThirtyMinutesApart() {
+    func testDetectsStrongOtherResetEvidenceAcrossTwoHourGap() {
+        let previous = snapshot(
+            fiveHour: nil,
+            weekly: limit(.weekly, remaining: 63, reset: 20_000),
+            fetchedAt: 0
+        )
+        let current = snapshot(
+            fiveHour: nil,
+            weekly: limit(.weekly, remaining: 100, reset: 100_000),
+            fetchedAt: 2 * 60 * 60
+        )
+
+        XCTAssertEqual(
+            QuotaResetDetector.events(previous: previous, current: current).map(\.kind),
+            [.otherReset]
+        )
+    }
+
+    func testRequiresResetDateToAdvanceForOtherReset() {
+        let previous = snapshot(
+            fiveHour: limit(.fiveHour, remaining: 20, reset: 20_000),
+            weekly: nil,
+            fetchedAt: 0
+        )
+        let current = snapshot(
+            fiveHour: limit(.fiveHour, remaining: 100, reset: 20_000),
+            weekly: nil,
+            fetchedAt: 2 * 60 * 60
+        )
+
+        XCTAssertTrue(QuotaResetDetector.events(previous: previous, current: current).isEmpty)
+    }
+
+    func testIgnoresOtherResetEvidenceAfterSixHourGap() {
+        let previous = snapshot(
+            fiveHour: limit(.fiveHour, remaining: 20, reset: 100_000),
+            weekly: nil,
+            fetchedAt: 0
+        )
+        let current = snapshot(
+            fiveHour: limit(.fiveHour, remaining: 100, reset: 200_000),
+            weekly: nil,
+            fetchedAt: 6 * 60 * 60 + 1
+        )
+
+        XCTAssertTrue(QuotaResetDetector.events(previous: previous, current: current).isEmpty)
+    }
+
+    func testIgnoresScheduledResetAfterThirtyMinuteGap() {
         let previous = snapshot(
             fiveHour: limit(.fiveHour, remaining: 20, reset: 1_000),
             weekly: nil,
@@ -103,10 +151,64 @@ final class BarkNotificationTests: XCTestCase {
         let current = snapshot(
             fiveHour: limit(.fiveHour, remaining: 100, reset: 5_000),
             weekly: nil,
-            fetchedAt: 1_801
+            fetchedAt: 30 * 60 + 1
         )
 
         XCTAssertTrue(QuotaResetDetector.events(previous: previous, current: current).isEmpty)
+    }
+
+    func testDetectsResetBankIncreaseAcrossLongObservationGap() {
+        let previous = snapshot(
+            fiveHour: nil,
+            weekly: nil,
+            fetchedAt: 0,
+            availableResetCount: 2
+        )
+        let current = snapshot(
+            fiveHour: nil,
+            weekly: nil,
+            fetchedAt: 3_600,
+            availableResetCount: 4
+        )
+
+        XCTAssertEqual(
+            QuotaResetDetector.events(previous: previous, current: current),
+            [QuotaResetEvent(
+                kind: .resetBankIncrease,
+                resetBankChange: ResetBankChange(previousCount: 2, currentCount: 4)
+            )]
+        )
+    }
+
+    func testDoesNotReportResetBankWhenCountIsUnavailableOrDoesNotIncrease() {
+        let baseline = snapshot(
+            fiveHour: nil,
+            weekly: nil,
+            fetchedAt: 0,
+            availableResetCount: 3
+        )
+        let unchanged = snapshot(
+            fiveHour: nil,
+            weekly: nil,
+            fetchedAt: 100,
+            availableResetCount: 3
+        )
+        let decreased = snapshot(
+            fiveHour: nil,
+            weekly: nil,
+            fetchedAt: 100,
+            availableResetCount: 2
+        )
+        let unavailable = snapshot(
+            fiveHour: nil,
+            weekly: nil,
+            fetchedAt: 100,
+            availableResetCount: nil
+        )
+
+        XCTAssertTrue(QuotaResetDetector.events(previous: baseline, current: unchanged).isEmpty)
+        XCTAssertTrue(QuotaResetDetector.events(previous: baseline, current: decreased).isEmpty)
+        XCTAssertTrue(QuotaResetDetector.events(previous: baseline, current: unavailable).isEmpty)
     }
 
     func testPersistsSettingsAndLastObservation() throws {
@@ -118,7 +220,8 @@ final class BarkNotificationTests: XCTestCase {
             deviceKey: "  example-key  ",
             notifyFiveHourReset: true,
             notifyWeeklyReset: false,
-            notifyOtherReset: true
+            notifyOtherReset: true,
+            notifyResetBankIncrease: true
         )
         let observation = snapshot(
             fiveHour: limit(.fiveHour, remaining: 40, reset: 5_000),
@@ -133,10 +236,26 @@ final class BarkNotificationTests: XCTestCase {
         XCTAssertTrue(preferences.loadSettings().isEnabled(.fiveHourReset))
         XCTAssertFalse(preferences.loadSettings().isEnabled(.weeklyReset))
         XCTAssertTrue(preferences.loadSettings().isEnabled(.otherReset))
+        XCTAssertTrue(preferences.loadSettings().isEnabled(.resetBankIncrease))
         XCTAssertEqual(preferences.loadLastObservation(), observation)
 
         preferences.saveSettings(BarkNotificationSettings())
         XCTAssertEqual(preferences.loadSettings().deviceKey, "")
+    }
+
+    func testMigratesResetBankSettingFromOtherResetPreference() throws {
+        let suiteName = "BarkNotificationTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(true, forKey: "test.notifyOtherReset")
+        let preferences = BarkNotificationPreferences(defaults: defaults, keyPrefix: "test")
+
+        XCTAssertTrue(preferences.loadSettings().notifyResetBankIncrease)
+
+        var settings = preferences.loadSettings()
+        settings.notifyResetBankIncrease = false
+        preferences.saveSettings(settings)
+        XCTAssertFalse(preferences.loadSettings().notifyResetBankIncrease)
     }
 
     func testBuildsPublicBarkEndpointFromKeyOrURL() throws {
@@ -208,12 +327,14 @@ final class BarkNotificationTests: XCTestCase {
     private func snapshot(
         fiveHour: QuotaLimit?,
         weekly: QuotaLimit?,
-        fetchedAt: TimeInterval
+        fetchedAt: TimeInterval,
+        availableResetCount: Int? = nil
     ) -> QuotaSnapshot {
         QuotaSnapshot(
             fiveHour: fiveHour,
             weekly: weekly,
-            fetchedAt: Date(timeIntervalSince1970: fetchedAt)
+            fetchedAt: Date(timeIntervalSince1970: fetchedAt),
+            availableResetCount: availableResetCount
         )
     }
 

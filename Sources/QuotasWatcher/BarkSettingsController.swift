@@ -11,6 +11,7 @@ final class BarkSettingsController: NSObject, NSWindowDelegate {
     private let fiveHourCheckbox = NSButton(checkboxWithTitle: L10n.text("bark.notify.five_hour"), target: nil, action: nil)
     private let weeklyCheckbox = NSButton(checkboxWithTitle: L10n.text("bark.notify.weekly"), target: nil, action: nil)
     private let otherCheckbox = NSButton(checkboxWithTitle: L10n.text("bark.notify.other"), target: nil, action: nil)
+    private let resetBankCheckbox = NSButton(checkboxWithTitle: L10n.text("bark.notify.reset_bank"), target: nil, action: nil)
     private let statusLabel = NSTextField(labelWithString: "")
     private let saveButton = NSButton(title: L10n.text("button.save"), target: nil, action: nil)
     private let cancelButton = NSButton(title: L10n.text("button.cancel"), target: nil, action: nil)
@@ -33,7 +34,7 @@ final class BarkSettingsController: NSObject, NSWindowDelegate {
 
     private func makeWindow() -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 300),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 330),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -68,7 +69,7 @@ final class BarkSettingsController: NSObject, NSWindowDelegate {
         keyRow.alignment = .centerY
         keyRow.spacing = 8
 
-        let checkboxStack = NSStackView(views: [fiveHourCheckbox, weeklyCheckbox, otherCheckbox])
+        let checkboxStack = NSStackView(views: [fiveHourCheckbox, weeklyCheckbox, otherCheckbox, resetBankCheckbox])
         checkboxStack.orientation = .vertical
         checkboxStack.alignment = .leading
         checkboxStack.spacing = 8
@@ -122,6 +123,7 @@ final class BarkSettingsController: NSObject, NSWindowDelegate {
         fiveHourCheckbox.state = settings.notifyFiveHourReset ? .on : .off
         weeklyCheckbox.state = settings.notifyWeeklyReset ? .on : .off
         otherCheckbox.state = settings.notifyOtherReset ? .on : .off
+        resetBankCheckbox.state = settings.notifyResetBankIncrease ? .on : .off
         statusLabel.stringValue = ""
         testButton.isEnabled = true
     }
@@ -169,6 +171,7 @@ final class BarkSettingsController: NSObject, NSWindowDelegate {
         let hasEnabledNotification = fiveHourCheckbox.state == .on
             || weeklyCheckbox.state == .on
             || otherCheckbox.state == .on
+            || resetBankCheckbox.state == .on
 
         if hasEnabledNotification && input.isEmpty {
             statusLabel.textColor = .systemRed
@@ -190,7 +193,8 @@ final class BarkSettingsController: NSObject, NSWindowDelegate {
             deviceKey: deviceKey,
             notifyFiveHourReset: fiveHourCheckbox.state == .on,
             notifyWeeklyReset: weeklyCheckbox.state == .on,
-            notifyOtherReset: otherCheckbox.state == .on
+            notifyOtherReset: otherCheckbox.state == .on,
+            notifyResetBankIncrease: resetBankCheckbox.state == .on
         ))
         settingsWindow?.close()
     }

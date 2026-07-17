@@ -77,7 +77,7 @@ After launch, look for `Codex --%` or `Codex NN%` in the macOS menu bar near the
 
 Touch Bar content is contextual: click the menu bar item to open the QuotasWatcher popover and make the app active. The Touch Bar mirrors the same two quota rows when macOS exposes a physical Touch Bar for the active app.
 
-The popover and right-click menu include `Copy Error` and `Copy Log` actions for troubleshooting. Logs are written to:
+The popover and right-click menu include `Copy Error` and `Open Log` actions for troubleshooting. Logs are written to:
 
 ```text
 ~/Library/Application Support/QuotasWatcher/QuotasWatcher.log
@@ -91,9 +91,10 @@ Notification types can be enabled independently:
 
 - Scheduled 5-hour resets
 - Scheduled weekly resets
-- Other/free resets, detected when remaining quota rises by at least 10 percentage points before its scheduled reset
+- Other/free resets, detected when remaining quota rises by at least 10 percentage points and the reset date advances before the scheduled reset
+- Reset-bank increases, detected when the number of available banked resets rises
 
-The Bark key is stored locally in macOS app preferences. QuotasWatcher never writes the key or complete push URL to its log. Reset comparisons are limited to successful quota observations no more than 30 minutes apart, so an old reset is not reported after a long shutdown.
+The Bark key is stored locally in macOS app preferences. QuotasWatcher never writes the key or complete push URL to its log. Scheduled-reset comparisons use a 30-minute observation window. Strong other/free-reset evidence remains eligible across gaps up to 6 hours, which covers ordinary sleep and network interruptions without reporting resets after a long shutdown. Reset-bank increases use the explicit bank count and can still be reported after a longer observation gap.
 
 ## Localization
 

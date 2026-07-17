@@ -8,7 +8,7 @@
 "quota.resets_available.other.format" = "%d 次重置可用";
 "button.refresh" = "刷新";
 "button.copy_error" = "复制错误";
-"button.copy_log" = "复制日志";
+"button.open_log" = "打开日志";
 "button.bark" = "Bark…";
 "button.quit" = "退出";
 "button.save" = "保存";
@@ -29,7 +29,6 @@
 "status.item.weekly.percent.format" = "Codex %d%% 周%@";
 "status.item.unavailable.format" = "Codex --%%%@";
 "clipboard.no_error" = "当前没有 QuotasWatcher 错误。";
-"clipboard.no_log" = "当前没有 QuotasWatcher 日志。";
 "bark.settings.title" = "Bark 通知";
 "bark.settings.heading" = "Bark 通知";
 "bark.settings.description" = "输入 Bark 推送链接中的设备密钥，然后选择需要通知的 Codex 额度重置类型。";
@@ -44,6 +43,7 @@
 "bark.notify.five_hour" = "5 小时额度重置时通知";
 "bark.notify.weekly" = "周额度重置时通知";
 "bark.notify.other" = "其他/赠送额度重置时通知";
+"bark.notify.reset_bank" = "重置次数增加时通知";
 "bark.validation.key_required" = "请先输入 Bark 密钥，再启用通知。";
 "bark.validation.invalid_key" = "请输入有效的 Bark 设备密钥或 api.day.app 链接。";
 "bark.push.five_hour.title" = "Codex 5 小时额度已重置";
@@ -51,3 +51,5 @@
 "bark.push.other.title" = "检测到 Codex 赠送额度";
 "bark.push.scheduled.body.format" = "额度周期已重置，当前剩余 %d%%。";
 "bark.push.other.change.format" = "%@：剩余 %d%% → %d%%";
+"bark.push.reset_bank.title" = "Codex 新增重置次数";
+"bark.push.reset_bank.body.format" = "可用重置次数从 %d 增加到 %d。";

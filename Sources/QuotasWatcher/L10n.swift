@@ -61,6 +61,16 @@ enum L10n {
                 )
             }
             return (text("bark.push.other.title"), changes.joined(separator: "\n"))
+        case .resetBankIncrease:
+            let change = event.resetBankChange
+            return (
+                text("bark.push.reset_bank.title"),
+                String(
+                    format: text("bark.push.reset_bank.body.format"),
+                    change?.previousCount ?? 0,
+                    change?.currentCount ?? 0
+                )
+            )
         }
     }
 }
