@@ -2,3 +2,7 @@
 .build/
 .swiftpm/
 dist/
+.agent/logs/
+.agent/KIMI_TASK.md
+.agent/STATUS.md
+.agent/REVIEW.md
