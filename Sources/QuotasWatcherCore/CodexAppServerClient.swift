@@ -23,8 +23,8 @@ public enum CodexAppServerError: LocalizedError, Equatable {
     }
 }
 
-public final class CodexAppServerClient {
-    public var timeout: TimeInterval
+public actor CodexAppServerClient {
+    public let timeout: TimeInterval
     private let log: AppLog
 
     public init(timeout: TimeInterval = 60, log: AppLog = .shared) {
@@ -33,14 +33,16 @@ public final class CodexAppServerClient {
     }
 
     public func fetchRateLimits() async throws -> QuotaSnapshot {
-        try await Task.detached(priority: .utility) {
-            try self.fetchRateLimitsBlocking()
+        let timeout = self.timeout
+        let log = self.log
+        return try await Task.detached(priority: .utility) {
+            try CodexAppServerClient.fetchRateLimitsBlocking(timeout: timeout, log: log)
         }.value
     }
 
-    private func fetchRateLimitsBlocking() throws -> QuotaSnapshot {
+    private static func fetchRateLimitsBlocking(timeout: TimeInterval, log: AppLog) throws -> QuotaSnapshot {
         let command = try CodexBinaryResolver.resolve()
-        log.append("Starting Codex app-server: \(command.executableURL.path) \((command.arguments + ["app-server", "--listen", "stdio://"]).joined(separator: " "))")
+        log.append("[Codex] Starting Codex app-server: \(command.executableURL.path) \((command.arguments + ["app-server", "--listen", "stdio://"]).joined(separator: " "))")
         let process = Process()
         process.executableURL = command.executableURL
         process.arguments = command.arguments + ["app-server", "--listen", "stdio://"]
@@ -61,7 +63,7 @@ public final class CodexAppServerClient {
             if !data.isEmpty {
                 stdoutBuffer.append(data)
                 if let text = String(data: data, encoding: .utf8), !text.isEmpty {
-                    self.log.append("stdout: \(text.trimmingCharacters(in: .whitespacesAndNewlines))")
+                    log.append("[Codex] stdout: \(text.trimmingCharacters(in: .whitespacesAndNewlines))")
                 }
             }
         }
@@ -70,7 +72,7 @@ public final class CodexAppServerClient {
             if !data.isEmpty {
                 stderrBuffer.append(data)
                 if let text = String(data: data, encoding: .utf8), !text.isEmpty {
-                    self.log.append("stderr: \(text.trimmingCharacters(in: .whitespacesAndNewlines))")
+                    log.append("[Codex] stderr: \(text.trimmingCharacters(in: .whitespacesAndNewlines))")
                 }
             }
         }
@@ -80,7 +82,7 @@ public final class CodexAppServerClient {
         } catch {
             stdout.fileHandleForReading.readabilityHandler = nil
             stderr.fileHandleForReading.readabilityHandler = nil
-            log.append("Launch failed: \(error.localizedDescription)")
+            log.append("[Codex] Launch failed: \(error.localizedDescription)")
             throw CodexAppServerError.launchFailed(error.localizedDescription)
         }
 
@@ -91,21 +93,22 @@ public final class CodexAppServerClient {
                 #"{"id":1,"method":"initialize","params":{"clientInfo":{"name":"QuotasWatcher","title":"QuotasWatcher","version":"0.3.0"},"capabilities":{"experimentalApi":true}}}"#,
                 to: stdin
             )
-            log.append("sent: initialize id=1")
+            log.append("[Codex] sent: initialize id=1")
             try waitForResponse(
                 id: .int(1),
                 stdoutBuffer: stdoutBuffer,
                 stderrBuffer: stderrBuffer,
                 process: process,
-                deadline: deadline
+                deadline: deadline,
+                log: log
             )
-            log.append("received: initialize id=1")
+            log.append("[Codex] received: initialize id=1")
 
             try send(#"{"id":2,"method":"account/rateLimits/read","params":null}"#, to: stdin)
-            log.append("sent: account/rateLimits/read id=2")
+            log.append("[Codex] sent: account/rateLimits/read id=2")
         } catch {
             cleanup(process: process, stdin: stdin, stdout: stdout, stderr: stderr)
-            log.append("Handshake failed: \(error.localizedDescription)")
+            log.append("[Codex] Handshake failed: \(error.localizedDescription)")
             throw error
         }
 
@@ -132,20 +135,20 @@ public final class CodexAppServerClient {
             cleanup(process: process, stdin: stdin, stdout: stdout, stderr: stderr)
             do {
                 let snapshot = try parsedResult.get()
-                log.append("received: account/rateLimits/read id=2 success")
+                log.append("[Codex] received: account/rateLimits/read id=2 success")
                 return snapshot
             } catch {
-                log.append("received: account/rateLimits/read id=2 error: \(error.localizedDescription)")
+                log.append("[Codex] received: account/rateLimits/read id=2 error: \(error.localizedDescription)")
                 throw error
             }
         }
 
         cleanup(process: process, stdin: stdin, stdout: stdout, stderr: stderr)
-        log.append("Timed out waiting for account/rateLimits/read id=2. stdout=\(String(data: stdoutBuffer.data(), encoding: .utf8) ?? "") stderr=\(String(data: stderrBuffer.data(), encoding: .utf8) ?? "")")
+        log.append("[Codex] Timed out waiting for account/rateLimits/read id=2.")
         throw CodexAppServerError.timeout
     }
 
-    private func send(_ json: String, to pipe: Pipe) throws {
+    private static func send(_ json: String, to pipe: Pipe) throws {
         guard let data = (json + "\n").data(using: .utf8) else {
             return
         }
@@ -156,12 +159,13 @@ public final class CodexAppServerClient {
         }
     }
 
-    private func waitForResponse(
+    private static func waitForResponse(
         id: JSONRPCRequestID,
         stdoutBuffer: LockedData,
         stderrBuffer: LockedData,
         process: Process,
-        deadline: Date
+        deadline: Date,
+        log: AppLog
     ) throws {
         while Date() < deadline {
             let stdoutText = String(data: stdoutBuffer.data(), encoding: .utf8) ?? ""
@@ -182,7 +186,7 @@ public final class CodexAppServerClient {
         throw CodexAppServerError.timeout
     }
 
-    private func cleanup(process: Process, stdin: Pipe, stdout: Pipe, stderr: Pipe) {
+    private static func cleanup(process: Process, stdin: Pipe, stdout: Pipe, stderr: Pipe) {
         try? stdin.fileHandleForWriting.close()
         if process.isRunning {
             process.terminate()
@@ -194,9 +198,14 @@ public final class CodexAppServerClient {
 }
 
 public enum CodexBinaryResolver {
-    public struct Command: Equatable {
+    public struct Command: Equatable, Sendable {
         public let executableURL: URL
         public let arguments: [String]
+
+        public init(executableURL: URL, arguments: [String]) {
+            self.executableURL = executableURL
+            self.arguments = arguments
+        }
     }
 
     public static func resolve(fileManager: FileManager = .default, environment: [String: String] = ProcessInfo.processInfo.environment) throws -> Command {

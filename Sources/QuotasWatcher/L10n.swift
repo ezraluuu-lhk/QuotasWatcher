@@ -1,6 +1,22 @@
 import Foundation
 import QuotasWatcherCore
 
+enum DateFormatters {
+    static let time: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    static let reset: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter
+    }()
+}
+
 enum L10n {
     static func text(_ key: String) -> String {
         let mainValue = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
@@ -23,17 +39,23 @@ enum L10n {
         return String(format: text(key), count)
     }
 
-    static func statusTitle(remainingPercent: Int?, isRefreshing: Bool) -> String {
+    static func statusTitle(for summary: QuotaSummary, isRefreshing: Bool) -> String {
         let suffix = isRefreshing ? " ..." : ""
-        guard let remainingPercent else {
-            return String(format: text("status.item.unavailable.format"), suffix)
+        let providerKey = summary.provider.statusItemLabelKey
+        guard let remainingPercent = summary.remainingPercent else {
+            let formatKey = summary.provider.statusItemUnavailableLabelKey
+            return String(format: text(formatKey), suffix)
         }
-        return String(format: text("status.item.percent.format"), remainingPercent, suffix)
+        if summary.isWeeklyFallback {
+            let formatKey = summary.provider.statusItemWeeklyLabelKey
+            return String(format: text(formatKey), remainingPercent, suffix)
+        }
+        let formatKey = providerKey
+        return String(format: text(formatKey), remainingPercent, suffix)
     }
 
-    static func weeklyStatusTitle(remainingPercent: Int, isRefreshing: Bool) -> String {
-        let suffix = isRefreshing ? " ..." : ""
-        return String(format: text("status.item.weekly.percent.format"), remainingPercent, suffix)
+    static func providerName(_ provider: QuotaProviderID) -> String {
+        text(provider.localizedKey)
     }
 
     static func barkNotification(for event: QuotaResetEvent) -> (title: String, body: String) {

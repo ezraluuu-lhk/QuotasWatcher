@@ -1,6 +1,6 @@
 import Foundation
 
-public struct QuotaRefreshState: Equatable {
+public struct QuotaRefreshState: Equatable, Sendable {
     public private(set) var snapshot: QuotaSnapshot?
     public private(set) var isRefreshing: Bool
     public private(set) var errorMessage: String?

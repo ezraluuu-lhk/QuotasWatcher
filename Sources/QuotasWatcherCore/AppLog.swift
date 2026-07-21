@@ -1,6 +1,9 @@
 import Foundation
 
-public final class AppLog {
+/// Thread-safe log sink: `fileURL` and `formatter` are immutable after init and
+/// every mutation of the shared log file is serialized through `lock`, which is
+/// why the `@unchecked Sendable` conformance is sound.
+public final class AppLog: @unchecked Sendable {
     public static let shared = AppLog()
 
     public let fileURL: URL

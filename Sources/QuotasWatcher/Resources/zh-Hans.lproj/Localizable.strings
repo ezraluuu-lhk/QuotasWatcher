@@ -1,4 +1,6 @@
-"app.title" = "Codex 额度";
+"app.title" = "QuotasWatcher";
+"provider.codex" = "Codex";
+"provider.kimi" = "Kimi";
 "quota.five_hour" = "5小时";
 "quota.weekly" = "周限额";
 "quota.five_hour.unavailable" = "5 小时额度暂不可用，菜单栏当前显示周额度。";
@@ -9,7 +11,7 @@
 "button.refresh" = "刷新";
 "button.copy_error" = "复制错误";
 "button.open_log" = "打开日志";
-"button.bark" = "Bark…";
+"button.bark" = "Codex Bark 通知…";
 "button.quit" = "退出";
 "button.save" = "保存";
 "button.cancel" = "取消";
@@ -28,6 +30,13 @@
 "status.item.percent.format" = "Codex %d%%%@";
 "status.item.weekly.percent.format" = "Codex %d%% 周%@";
 "status.item.unavailable.format" = "Codex --%%%@";
+"status.item.label.codex" = "Codex %d%%%@";
+"status.item.label.kimi" = "Kimi %d%%%@";
+"status.item.weekly.label.codex" = "Codex %d%% 周%@";
+"status.item.weekly.label.kimi" = "Kimi %d%% 周%@";
+"status.item.unavailable.label.codex" = "Codex --%%%@";
+"status.item.unavailable.label.kimi" = "Kimi --%%%@";
+"touchbar.weekly.marker" = "周";
 "clipboard.no_error" = "当前没有 QuotasWatcher 错误。";
 "bark.settings.title" = "Bark 通知";
 "bark.settings.heading" = "Bark 通知";
