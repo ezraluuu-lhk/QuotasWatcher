@@ -90,7 +90,7 @@ public actor CodexAppServerClient {
 
         do {
             try send(
-                #"{"id":1,"method":"initialize","params":{"clientInfo":{"name":"QuotasWatcher","title":"QuotasWatcher","version":"0.3.0"},"capabilities":{"experimentalApi":true}}}"#,
+                #"{"id":1,"method":"initialize","params":{"clientInfo":{"name":"QuotasWatcher","title":"QuotasWatcher","version":"0.4.0"},"capabilities":{"experimentalApi":true}}}"#,
                 to: stdin
             )
             log.append("[Codex] sent: initialize id=1")
