@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var dashboard = QuotaDashboardState()
     private var coordinator: QuotaRefreshCoordinator?
     private var refreshTimer: Timer?
+    private var positionMaintainer: PopoverPositionMaintainer?
     private lazy var barkSettingsController = BarkSettingsController(
         preferences: barkPreferences,
         client: barkClient
@@ -89,6 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         refreshTimer?.invalidate()
+        positionMaintainer?.stop()
     }
 
     private func configureStatusItem() {
@@ -105,6 +107,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.behavior = .transient
         popover.contentSize = NSSize(width: 470, height: 240)
         popover.contentViewController = viewController
+        let maintainer = PopoverPositionMaintainer(popover: popover, statusItem: statusItem)
+        positionMaintainer = maintainer
+        popover.delegate = maintainer
         viewController.touchBar = touchBarController.makeTouchBar()
         viewController.onRefresh = { [weak self] in
             Task {

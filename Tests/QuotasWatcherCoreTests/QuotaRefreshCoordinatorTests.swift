@@ -234,6 +234,15 @@ final class QuotaRefreshCoordinatorTests: XCTestCase {
 
         let final = await waitUntil(in: coordinator) { !$0.isRefreshing(.kimi) }
         XCTAssertEqual(final.snapshot(for: .kimi), kimiSnapshot)
+
+        // The finish transition mutates dashboard state before the
+        // main-actor delivery runs, so observing the finished state does
+        // not imply the finish callback has been recorded yet. Wait for
+        // the delivery itself instead of racing it.
+        let deliveryDeadline = Date().addingTimeInterval(5)
+        while updates.values.count < 2, Date() < deliveryDeadline {
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
         XCTAssertEqual(updates.values.count, 2)
         XCTAssertFalse(updates.values.last?.isRefreshing(.kimi) ?? true)
     }

@@ -192,3 +192,12 @@ The work is complete when:
 5. Existing Codex behavior and notifications continue working.
 6. Tests, localization checks, release build, and packaging all succeed.
 7. No authentication secrets appear in source code, logs, tests, or committed files.
+
+## User-approved follow-up — fullscreen auto-hidden menu bar
+
+On 2026-07-21, the user explicitly requested that the popover anchoring defect be fixed:
+
+- With the macOS menu bar visible, the status-item popover is positioned correctly.
+- In a fullscreen Space with the menu bar configured to auto-hide, the open popover remains at the status item's former position after the menu bar hides and its top portion becomes clipped.
+
+The packaged application must keep an already-open popover fully visible and correctly associated with the QuotasWatcher status item as the fullscreen menu bar hides and reappears. The repair must preserve transient close behavior, selected-provider state, tab switching without close, dynamic content sizing, status-item actions, and existing Codex/Kimi behavior. Use supported AppKit APIs; do not use private APIs or a continuous polling loop.
