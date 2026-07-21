@@ -1,4 +1,6 @@
-"app.title" = "Codex Quota";
+"app.title" = "QuotasWatcher";
+"provider.codex" = "Codex";
+"provider.kimi" = "Kimi";
 "quota.five_hour" = "5h";
 "quota.weekly" = "Weekly";
 "quota.five_hour.unavailable" = "5-hour limit unavailable — weekly usage is shown in the menu bar.";
@@ -9,7 +11,7 @@
 "button.refresh" = "Refresh";
 "button.copy_error" = "Copy Error";
 "button.open_log" = "Open Log";
-"button.bark" = "Bark…";
+"button.bark" = "Codex Bark…";
 "button.quit" = "Quit";
 "button.save" = "Save";
 "button.cancel" = "Cancel";
@@ -28,6 +30,13 @@
 "status.item.percent.format" = "Codex %d%%%@";
 "status.item.weekly.percent.format" = "Codex %d%% W%@";
 "status.item.unavailable.format" = "Codex --%%%@";
+"status.item.label.codex" = "Codex %d%%%@";
+"status.item.label.kimi" = "Kimi %d%%%@";
+"status.item.weekly.label.codex" = "Codex %d%% W%@";
+"status.item.weekly.label.kimi" = "Kimi %d%% W%@";
+"status.item.unavailable.label.codex" = "Codex --%%%@";
+"status.item.unavailable.label.kimi" = "Kimi --%%%@";
+"touchbar.weekly.marker" = "W";
 "clipboard.no_error" = "No current QuotasWatcher error.";
 "bark.settings.title" = "Bark Notifications";
 "bark.settings.heading" = "Bark Notifications";

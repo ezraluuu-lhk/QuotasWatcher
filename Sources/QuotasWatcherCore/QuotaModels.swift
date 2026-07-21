@@ -1,34 +1,34 @@
 import Foundation
 
-public struct RateLimitWindow: Codable, Equatable {
+public struct RateLimitWindow: Codable, Equatable, Sendable {
     public let usedPercent: Double
     public let windowDurationMins: Int?
     public let resetsAt: TimeInterval?
 }
 
-public struct RateLimitSnapshot: Codable, Equatable {
+public struct RateLimitSnapshot: Codable, Equatable, Sendable {
     public let limitId: String?
     public let limitName: String?
     public let primary: RateLimitWindow?
     public let secondary: RateLimitWindow?
 }
 
-public struct GetAccountRateLimitsResponse: Codable, Equatable {
+public struct GetAccountRateLimitsResponse: Codable, Equatable, Sendable {
     public let rateLimits: RateLimitSnapshot
     public let rateLimitsByLimitId: [String: RateLimitSnapshot]?
     public let rateLimitResetCredits: RateLimitResetCreditsSummary?
 }
 
-public struct RateLimitResetCreditsSummary: Codable, Equatable {
+public struct RateLimitResetCreditsSummary: Codable, Equatable, Sendable {
     public let availableCount: Int
 }
 
-public enum QuotaKind: String, Codable, Equatable {
+public enum QuotaKind: String, Codable, Equatable, Sendable {
     case fiveHour
     case weekly
 }
 
-public struct QuotaLimit: Codable, Equatable {
+public struct QuotaLimit: Codable, Equatable, Sendable {
     public let kind: QuotaKind
     public let usedPercent: Double
     public let remainingPercent: Double
@@ -44,7 +44,7 @@ public struct QuotaLimit: Codable, Equatable {
     }
 }
 
-public struct QuotaSnapshot: Codable, Equatable {
+public struct QuotaSnapshot: Codable, Equatable, Sendable {
     public let fiveHour: QuotaLimit?
     public let weekly: QuotaLimit?
     public let fetchedAt: Date
